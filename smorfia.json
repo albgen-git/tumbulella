@@ -1,0 +1,374 @@
+{
+  "nome_tavola": "La Smorfia dei quartieri",
+  "fonte": "docs/reference/la_smorfia_dei_quartieri.pdf",
+  "numeri": {
+    "1": {
+      "napoletano": "L'Italia",
+      "italiano": "L'Italia"
+    },
+    "2": {
+      "napoletano": "'a peccerella",
+      "italiano": "la piccolina"
+    },
+    "3": {
+      "napoletano": "'o stuorto dint' 'a villa",
+      "italiano": "lo storto nella villa"
+    },
+    "4": {
+      "napoletano": "'o puorco",
+      "italiano": "il porco"
+    },
+    "5": {
+      "napoletano": "'a mana",
+      "italiano": "la mano"
+    },
+    "6": {
+      "napoletano": "chella ca guarda sempe 'nterra",
+      "italiano": "quella che guarda sempre per terra",
+      "variante_scabrosa": "allusione all'organo genitale femminile, per eufemismo — così viene chiamato nel testo di riferimento"
+    },
+    "7": {
+      "napoletano": "'e sette peccate murtale",
+      "italiano": "i sette peccati mortali"
+    },
+    "8": {
+      "napoletano": "Maria, 'a Madonna",
+      "italiano": "Maria, la Madonna"
+    },
+    "9": {
+      "napoletano": "'a figliata",
+      "italiano": "la figliata"
+    },
+    "10": {
+      "napoletano": "'e fasule",
+      "italiano": "i fagioli"
+    },
+    "11": {
+      "napoletano": "'e surece",
+      "italiano": "i topi"
+    },
+    "12": {
+      "napoletano": "'o surdate",
+      "italiano": "il soldato"
+    },
+    "13": {
+      "napoletano": "Sant'Antonio",
+      "italiano": "Sant'Antonio"
+    },
+    "14": {
+      "napoletano": "'o 'mbriaco",
+      "italiano": "l'ubriaco"
+    },
+    "15": {
+      "napoletano": "'o Rre",
+      "italiano": "il Re"
+    },
+    "16": {
+      "napoletano": "'o culo",
+      "italiano": "il culo",
+      "variante_scabrosa": "già di per sé scabroso nel significato base, nessuna variante aggiuntiva necessaria"
+    },
+    "17": {
+      "napoletano": "'a disgrazzia",
+      "italiano": "la disgrazia"
+    },
+    "18": {
+      "napoletano": "'o sanghe",
+      "italiano": "il sangue"
+    },
+    "19": {
+      "napoletano": "San Giuseppe",
+      "italiano": "San Giuseppe"
+    },
+    "20": {
+      "napoletano": "'a festa",
+      "italiano": "la festa"
+    },
+    "21": {
+      "napoletano": "'a femmena annura",
+      "italiano": "la donna nuda",
+      "variante_scabrosa": "già di per sé scabroso nel significato base, nessuna variante aggiuntiva necessaria"
+    },
+    "22": {
+      "napoletano": "'o pazzo",
+      "italiano": "il pazzo"
+    },
+    "23": {
+      "napoletano": "'o scemo",
+      "italiano": "lo scemo"
+    },
+    "24": {
+      "napoletano": "'e guardie",
+      "italiano": "le guardie"
+    },
+    "25": {
+      "napoletano": "Natale",
+      "italiano": "Natale"
+    },
+    "26": {
+      "napoletano": "Nannenella",
+      "italiano": "Nannenella"
+    },
+    "27": {
+      "napoletano": "è muscio",
+      "italiano": "è moscio"
+    },
+    "28": {
+      "napoletano": "'e zizze, zuche e dduorme",
+      "italiano": "i seni, succhia e dormi",
+      "variante_scabrosa": "riferimento al seno, con doppio senso adulto nel testo di riferimento"
+    },
+    "29": {
+      "napoletano": "'o pesce, 'o pate d' 'e criature, chille ca cumbine tutte 'e guaie",
+      "italiano": "il pesce, il padre dei bambini, quello che combina tutti i guai",
+      "variante_scabrosa": "eufemismo tradizionale per l'organo genitale maschile, come documentato nel testo di riferimento"
+    },
+    "30": {
+      "napoletano": "'e palle d' 'o tenente",
+      "italiano": "le palle del tenente"
+    },
+    "31": {
+      "napoletano": "'o padrone 'e casa",
+      "italiano": "il padrone di casa"
+    },
+    "32": {
+      "napoletano": "'o capitone",
+      "italiano": "il capitone"
+    },
+    "33": {
+      "napoletano": "l'anne 'e Cristo",
+      "italiano": "gli anni di Cristo"
+    },
+    "34": {
+      "napoletano": "'a capocchia",
+      "italiano": "la testa"
+    },
+    "35": {
+      "napoletano": "l'auciello",
+      "italiano": "l' uccello"
+    },
+    "36": {
+      "napoletano": "'e caramelle",
+      "italiano": "le caramelle"
+    },
+    "37": {
+      "napoletano": "'o moneco",
+      "italiano": "il monaco"
+    },
+    "38": {
+      "napoletano": "'e mazzate",
+      "italiano": "le botte"
+    },
+    "39": {
+      "napoletano": "l'acqua, 'nganne",
+      "italiano": "l'acqua, in gola"
+    },
+    "40": {
+      "napoletano": "'a neva",
+      "italiano": "la neve"
+    },
+    "41": {
+      "napoletano": "'o curtiello",
+      "italiano": "il coltello"
+    },
+    "42": {
+      "napoletano": "'o cafè",
+      "italiano": "il caffè"
+    },
+    "43": {
+      "napoletano": "'onna Pereta fore 'o barcone",
+      "italiano": "donna Pereta fuori al balcone"
+    },
+    "44": {
+      "napoletano": "'e carcere",
+      "italiano": "il carcere"
+    },
+    "45": {
+      "napoletano": "'o vino",
+      "italiano": "il vino"
+    },
+    "46": {
+      "napoletano": "'a pummarola",
+      "italiano": "il pomodoro"
+    },
+    "47": {
+      "napoletano": "'o muorto",
+      "italiano": "il morto"
+    },
+    "48": {
+      "napoletano": "'o muorto ca parla",
+      "italiano": "il morto che parla"
+    },
+    "49": {
+      "napoletano": "'o piezzo 'e carne",
+      "italiano": "il pezzo di carne"
+    },
+    "50": {
+      "napoletano": "'o ppane",
+      "italiano": "il pane"
+    },
+    "51": {
+      "napoletano": "'o ciardino",
+      "italiano": "il giardino"
+    },
+    "52": {
+      "napoletano": "Mammà",
+      "italiano": "Mamma"
+    },
+    "53": {
+      "napoletano": "'o vecchio",
+      "italiano": "il vecchio"
+    },
+    "54": {
+      "napoletano": "'o cappiello",
+      "italiano": "il cappello"
+    },
+    "55": {
+      "napoletano": "'a museca",
+      "italiano": "la musica"
+    },
+    "56": {
+      "napoletano": "'a caruta",
+      "italiano": "la caduta"
+    },
+    "57": {
+      "napoletano": "'o scartellato",
+      "italiano": "il gobbo"
+    },
+    "58": {
+      "napoletano": "s'è abbuccato",
+      "italiano": "si è chinato"
+    },
+    "59": {
+      "napoletano": "'o gallinaccio",
+      "italiano": "il tacchino"
+    },
+    "60": {
+      "napoletano": "se lamenta",
+      "italiano": "si lamenta"
+    },
+    "61": {
+      "napoletano": "'o cacciatore",
+      "italiano": "il cacciatore"
+    },
+    "62": {
+      "napoletano": "'o muorto acciso",
+      "italiano": "il morto ucciso"
+    },
+    "63": {
+      "napoletano": "'a sposa",
+      "italiano": "la sposa",
+      "variante_scabrosa": "nel testo di riferimento viene descritta con un'allusione alla prima notte di nozze"
+    },
+    "64": {
+      "napoletano": "'a sciammeria",
+      "italiano": "il giaccone"
+    },
+    "65": {
+      "napoletano": "chiagne",
+      "italiano": "piange"
+    },
+    "66": {
+      "napoletano": "'e ddoie zetelle",
+      "italiano": "le due zitelle"
+    },
+    "67": {
+      "napoletano": "'o totaro int' 'a chitarra",
+      "italiano": "il totano nella chitarra"
+    },
+    "68": {
+      "napoletano": "'a menesta",
+      "italiano": "la minestra"
+    },
+    "69": {
+      "napoletano": "'o sotto e 'ncoppa",
+      "italiano": "il sotto e sopra"
+    },
+    "70": {
+      "napoletano": "'o palazzo",
+      "italiano": "il palazzo"
+    },
+    "71": {
+      "napoletano": "l'omme 'e mmerda",
+      "italiano": "l'uomo di merda"
+    },
+    "72": {
+      "napoletano": "'a meraviglia",
+      "italiano": "la meraviglia"
+    },
+    "73": {
+      "napoletano": "'o spitale",
+      "italiano": "l'ospedale"
+    },
+    "74": {
+      "napoletano": "'a 'rotta",
+      "italiano": "la grotta"
+    },
+    "75": {
+      "napoletano": "Pullecenella",
+      "italiano": "Pulcinella"
+    },
+    "76": {
+      "napoletano": "'a fontana",
+      "italiano": "la fontana"
+    },
+    "77": {
+      "napoletano": "'e corne",
+      "italiano": "le corna",
+      "variante_scabrosa": "allusione al tradimento coniugale, tema classico della tradizione scaramantica napoletana"
+    },
+    "78": {
+      "napoletano": "'a puttana",
+      "italiano": "la prostituta"
+    },
+    "79": {
+      "napoletano": "'o mariuolo",
+      "italiano": "il ladro"
+    },
+    "80": {
+      "napoletano": "'a vocca",
+      "italiano": "la bocca"
+    },
+    "81": {
+      "napoletano": "'e sciure",
+      "italiano": "i fiori"
+    },
+    "82": {
+      "napoletano": "'a tavula",
+      "italiano": "la tavola"
+    },
+    "83": {
+      "napoletano": "'o pireto",
+      "italiano": "la scorreggia"
+    },
+    "84": {
+      "napoletano": "'a chiesa",
+      "italiano": "la chiesa"
+    },
+    "85": {
+      "napoletano": "l'aneme 'o Priatorio",
+      "italiano": "le anime del Purgatorio"
+    },
+    "86": {
+      "napoletano": "'a puteca",
+      "italiano": "la bottega"
+    },
+    "87": {
+      "napoletano": "'e perucchie",
+      "italiano": "i pidocchi"
+    },
+    "88": {
+      "napoletano": "'e casecavalle",
+      "italiano": "i caciocavalli"
+    },
+    "89": {
+      "napoletano": "'a zoccola",
+      "italiano": "la zoccola",
+      "variante_scabrosa": "in senso figurato/gergale il termine ha anche un'accezione volgare riferita a una donna, oltre al significato letterale di 'ratto di fogna'"
+    },
+    "90": {
+      "napoletano": "'a paura",
+      "italiano": "la paura"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+# Segreti — non finiscono mai nel repo (vedi anche backend/.gitignore)
+.env
+backend/.env
+
+# Ambiente Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Config locale di Claude Code (non serve nel repo pubblico)
+.claude/
+
+# Log del server locale
+backend/*.log
+
+# File di sistema
+.DS_Store
+Thumbs.db

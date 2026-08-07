@@ -1,0 +1,392 @@
+// NOTA: questo file NON viene caricato direttamente da index.html.
+// Babel standalone carica gli script esterni via XHR, che i browser bloccano
+// per CORS quando la pagina è aperta con file:// — per questo il codice qui
+// sotto è duplicato inline dentro <script type="text/babel"> in index.html.
+// Tenuto qui solo come sorgente leggibile: se lo modifichi, aggiorna anche
+// il blocco corrispondente in index.html (o chiedi a Claude di farlo).
+const { useState, useRef, useEffect, useCallback } = React;
+
+// ---------- Icone decorative folk (linea + tinte calde) ----------
+function VesuvioIcon({ className }) {
+  return (
+    <svg viewBox="0 0 100 60" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 54 L34 12 L42 24 L50 8 L96 54 Z" fill="#c1553b" stroke="#2b2622" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M42 24 L50 8 L58 22" stroke="#2b2622" strokeWidth="2.5" strokeLinejoin="round" fill="#e0a93e" />
+      <path d="M46 16 q4 -8 10 -4" stroke="#2b2622" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+function PulcinellaIcon({ className }) {
+  return (
+    <svg viewBox="0 0 60 70" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30 6c-10 0-14 10-14 18 0 4 1 7 3 9-6 3-9 9-9 16 0 10 9 15 20 15s20-5 20-15c0-7-3-13-9-16 2-2 3-5 3-9 0-8-4-18-14-18Z" fill="#fdfaf3" stroke="#2b2622" strokeWidth="2.5" />
+      <path d="M18 20c4-10 8-16 12-16s8 6 12 16" stroke="#2b2622" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <circle cx="24" cy="30" r="2" fill="#2b2622" />
+      <circle cx="36" cy="30" r="2" fill="#2b2622" />
+      <path d="M27 35c1 2 5 2 6 0" stroke="#2b2622" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M30 5 30 -3" stroke="#158bc4" strokeWidth="0" />
+    </svg>
+  );
+}
+function CiuccioIcon({ className }) {
+  return (
+    <svg viewBox="0 0 90 60" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="40" cy="38" rx="26" ry="16" fill="#e0a93e" stroke="#2b2622" strokeWidth="2.5" />
+      <path d="M64 30 L82 18 L78 34 L64 38Z" fill="#e0a93e" stroke="#2b2622" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M20 26 L10 8" stroke="#2b2622" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M28 24 L20 4" stroke="#2b2622" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="70" cy="26" r="1.6" fill="#2b2622" />
+      <path d="M14 50 L18 34 M60 52 L58 40" stroke="#2b2622" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ---------- UI building blocks ----------
+function IntensitySelector({ intensity, setIntensity, disabled }) {
+  return (
+    <div
+      className={"paper-card rounded-xl p-1.5 flex gap-1 shrink-0 " + (disabled ? "opacity-50" : "")}
+      title={disabled ? "Bloccato per tutta la partita — premi \"Inizia una nuova storia\" per cambiarlo" : undefined}
+    >
+      {["soft", "spinto"].map((level) => (
+        <button
+          key={level}
+          onClick={() => !disabled && setIntensity(level)}
+          disabled={disabled}
+          className={
+            "px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wide transition-colors " +
+            (disabled ? "cursor-not-allowed " : "") +
+            (intensity === level
+              ? level === "soft"
+                ? "bg-napoli-600 text-cream-50"
+                : "bg-terracotta-500 text-cream-50"
+              : "text-ink/60 " + (disabled ? "" : "hover:text-ink"))
+          }
+        >
+          {level === "soft" ? "🕊️ Soft" : "🌶️ Spinto"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function LanguageSelector({ language, setLanguage, disabled }) {
+  return (
+    <select
+      value={language}
+      onChange={(e) => setLanguage(e.target.value)}
+      disabled={disabled}
+      title={disabled ? "Bloccato per tutta la partita — premi \"Inizia una nuova storia\" per cambiarlo" : undefined}
+      className={"lang-select paper-card rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-ink shrink-0 " + (disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
+      aria-label="Lingua del racconto"
+    >
+      {window.LANGUAGES.map((l) => (
+        <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+      ))}
+    </select>
+  );
+}
+
+// Stato del "banditore": chiamata (fase 1) -> pausa (si cerca il numero) -> narrazione (fase 2) -> idle.
+function NarratorStatus({ phase, currentCall, language }) {
+  const labels = window.STATUS_LABELS[language] || window.STATUS_LABELS.nap;
+  const active = phase === "calling" || phase === "narrando";
+  let text = labels.idle;
+  if (phase === "calling") text = "📢 " + currentCall;
+  else if (phase === "pausa") text = labels.pausa;
+  else if (phase === "narrando") text = labels.narrando;
+
+  return (
+    <div className="flex items-center gap-2 text-sm font-semibold text-napoli-700 min-w-0">
+      <div className="flex items-end gap-0.5 h-4 w-6 shrink-0">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className={
+              "w-1.5 rounded-full bg-terracotta-500 " +
+              (active ? "speak-bar" : phase === "pausa" ? "pulse-soft" : "")
+            }
+            style={{ height: active ? undefined : "20%", animationDelay: i * 0.15 + "s" }}
+          />
+        ))}
+      </div>
+      <span className="truncate">{text}</span>
+    </div>
+  );
+}
+
+function NumberCell({ n, extracted, order, onClick }) {
+  return (
+    <button
+      onClick={() => onClick(n)}
+      className={
+        "relative aspect-square rounded-md flex items-center justify-center font-numeral text-base sm:text-lg border-2 transition-all " +
+        (extracted
+          ? "bg-terracotta-500 border-ink text-cream-50 cell-pop"
+          : "bg-cream-50 border-ink/30 text-ink hover:border-napoli-500 hover:bg-napoli-50")
+      }
+      aria-pressed={extracted}
+    >
+      {n}
+      {extracted && (
+        <span className="absolute -top-1.5 -right-1.5 bg-napoli-600 text-cream-50 text-[9px] rounded-full w-4 h-4 flex items-center justify-center border border-cream-50">
+          {order}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function Board({ extractedSet, extractedOrder, onCellClick }) {
+  const numbers = Array.from({ length: 90 }, (_, i) => i + 1);
+  return (
+    <div className="paper-card rounded-2xl p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-bold text-lg text-napoli-800">'O Tabbellone</h2>
+        <span className="text-xs font-semibold text-ink/60">{extractedOrder.length} / 90 estratti</span>
+      </div>
+      <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
+        {numbers.map((n) => (
+          <NumberCell
+            key={n}
+            n={n}
+            extracted={extractedSet.has(n)}
+            order={extractedOrder.indexOf(n) + 1}
+            onClick={onCellClick}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StoryPanel({ fragments, phase, currentCall, language, onCopy, copyState }) {
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [fragments.length, fragments.map((f) => f.text).join("|")]);
+
+  const emptyText = window.EMPTY_STATE_TEXT[language] || window.EMPTY_STATE_TEXT.nap;
+
+  return (
+    <div className="paper-card rounded-2xl p-4 sm:p-5 flex flex-col h-full">
+      <div className="flex items-center justify-between mb-1 gap-2">
+        <h2 className="font-display font-bold text-lg text-napoli-800">'O Racconto</h2>
+        <NarratorStatus phase={phase} currentCall={currentCall} language={language} />
+      </div>
+      <div className="scallop opacity-40 mb-3" />
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pr-1 space-y-3 min-h-[220px] max-h-[420px]">
+        {fragments.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center text-ink/50 gap-3 py-8">
+            <div className="flex gap-3">
+              <VesuvioIcon className="w-14" />
+              <PulcinellaIcon className="w-10" />
+              <CiuccioIcon className="w-14" />
+            </div>
+            <p className="font-body text-sm max-w-[220px]">{emptyText}</p>
+          </div>
+        ) : (
+          fragments.map((f, i) =>
+            f.text ? (
+              <p key={i} className="fade-in-line font-body text-[15px] leading-relaxed text-ink">
+                <span className="font-numeral text-napoli-700 mr-1">{f.n}.</span>
+                {f.text}
+              </p>
+            ) : (
+              <p key={i} className="fade-in-line font-body text-[15px] leading-relaxed text-ink/40 italic">
+                <span className="font-numeral text-napoli-700 mr-1 not-italic">{f.n}.</span>
+                <span className="pulse-soft">…</span>
+              </p>
+            )
+          )
+        )}
+      </div>
+      <div className="pt-3 mt-2 border-t border-ink/10 flex items-center justify-between gap-3">
+        <span className="text-xs text-ink/50">{copyState === "copied" ? "✅ Copiato!" : "Copia il racconto quando vuoi"}</span>
+        <button
+          onClick={onCopy}
+          disabled={fragments.length === 0}
+          className="px-4 py-2 rounded-lg bg-napoli-600 text-cream-50 text-sm font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-napoli-700 transition-colors"
+        >
+          📋 Copia / Condividi
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [intensity, setIntensity] = useState("soft");
+  const [language, setLanguage] = useState("nap");
+  const [extractedOrder, setExtractedOrder] = useState([]);
+  const [fragments, setFragments] = useState([]); // { n, text: string|null } — null finché la fase 2 non è pronta
+  const [phase, setPhase] = useState("idle"); // idle | calling | pausa | narrando
+  const [currentCall, setCurrentCall] = useState(null);
+  const [copyState, setCopyState] = useState("idle");
+  const [muted, setMuted] = useState(false);
+
+  const orderRef = useRef([]); // fonte di verità sincrona per l'ordine estratti
+  const queueRef = useRef([]); // coda dei numeri cliccati in attesa di "chiamata + narrazione"
+  const processingRef = useRef(false);
+  const sessionRef = useRef(0); // incrementato a ogni "nuova storia": invalida le sequenze in corso
+  const intensityRef = useRef(intensity);
+  const languageRef = useRef(language);
+  const mutedRef = useRef(muted);
+
+  useEffect(() => { intensityRef.current = intensity; }, [intensity]);
+  useEffect(() => { languageRef.current = language; }, [language]);
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
+
+  const extractedSet = new Set(extractedOrder);
+
+  function sleep(ms, session) {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(sessionRef.current === session), ms);
+    });
+  }
+
+  // Legge `text` ad alta voce (Web Speech API); se muto o non disponibile,
+  // ricade su una pausa fissa della stessa durata approssimativa di sempre.
+  async function speakOrWait(text, lang, fallbackMs, session) {
+    const spoke = await window.speak(text, lang, mutedRef.current);
+    if (sessionRef.current !== session) return false;
+    if (!spoke) return sleep(fallbackMs, session);
+    return true;
+  }
+
+  // Riproduce la sequenza a due fasi di un numero: chiamata -> pausa -> narrazione.
+  // Ogni `await` verifica che la sessione sia ancora valida (nessun reset nel frattempo).
+  async function playSequence(item, session) {
+    const lang = languageRef.current;
+    const level = intensityRef.current;
+
+    setPhase("calling");
+    const callText = window.buildCall(item.n, lang);
+    setCurrentCall(callText);
+    if (!(await speakOrWait(callText, lang, window.TIMING.CALL_MS, session))) return;
+
+    setPhase("pausa");
+    if (!(await sleep(window.TIMING.PAUSE_MS, session))) return;
+
+    setPhase("narrando");
+    const text = window.buildNarration(item.clickIndex, item.n, item.prevNum, lang, level);
+    setFragments((prev) => prev.map((f) => (f.n === item.n ? { ...f, text } : f)));
+    if (!(await speakOrWait(text, lang, window.TIMING.NARRATION_MS, session))) return;
+
+    setPhase("idle");
+    setCurrentCall(null);
+  }
+
+  // Coda sequenziale: se si cliccano più numeri di fila, le chiamate si accodano
+  // invece di accavallarsi (come farebbe un solo banditore dal vivo).
+  async function processQueue(session) {
+    if (processingRef.current) return;
+    processingRef.current = true;
+    while (queueRef.current.length > 0 && sessionRef.current === session) {
+      const item = queueRef.current.shift();
+      await playSequence(item, session);
+    }
+    processingRef.current = false;
+  }
+
+  const handleCellClick = useCallback((n) => {
+    if (orderRef.current.includes(n)) return;
+    const clickIndex = orderRef.current.length;
+    const prevNum = clickIndex > 0 ? orderRef.current[clickIndex - 1] : null;
+    orderRef.current = [...orderRef.current, n];
+    setExtractedOrder(orderRef.current);
+    setFragments((prev) => [...prev, { n, text: null }]);
+    queueRef.current.push({ n, clickIndex, prevNum });
+    processQueue(sessionRef.current);
+  }, []);
+
+  const handleNewStory = () => {
+    sessionRef.current += 1;
+    window.stopSpeaking();
+    orderRef.current = [];
+    queueRef.current = [];
+    processingRef.current = false;
+    setExtractedOrder([]);
+    setFragments([]);
+    setPhase("idle");
+    setCurrentCall(null);
+    setCopyState("idle");
+  };
+
+  const handleCopy = async () => {
+    const text = fragments.filter((f) => f.text).map((f) => f.text).join(" ");
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (err) {}
+      document.body.removeChild(ta);
+    }
+    setCopyState("copied");
+    setTimeout(() => setCopyState("idle"), 2000);
+  };
+
+  return (
+    <div className="min-h-screen">
+      <header className="border-b-4 border-ink bg-cream-50/80 backdrop-blur sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <VesuvioIcon className="w-9 hidden sm:block" />
+            <div>
+              <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-napoli-700 leading-none">Tumbulella</h1>
+              <p className="text-[11px] text-ink/50 tracking-wide">'a smorfia ca cunta 'e storie</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <LanguageSelector language={language} setLanguage={setLanguage} disabled={extractedOrder.length > 0} />
+            <IntensitySelector intensity={intensity} setIntensity={setIntensity} disabled={extractedOrder.length > 0} />
+            <button
+              onClick={() => {
+                const next = !muted;
+                setMuted(next);
+                if (next) window.stopSpeaking();
+              }}
+              title={muted ? "Riattiva la voce" : "Disattiva la voce"}
+              className="paper-card rounded-xl w-11 h-11 flex items-center justify-center text-lg shrink-0"
+            >
+              {muted ? "🔇" : "🔊"}
+            </button>
+            <button
+              onClick={handleNewStory}
+              className="px-4 py-2.5 rounded-xl bg-ink text-cream-50 text-sm font-bold hover:bg-ink/80 transition-colors"
+            >
+              🔄 Inizia una nuova storia
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div className="grid lg:grid-cols-5 gap-5">
+          <div className="lg:col-span-3">
+            <Board extractedSet={extractedSet} extractedOrder={extractedOrder} onCellClick={handleCellClick} />
+          </div>
+          <div className="lg:col-span-2">
+            <StoryPanel
+              fragments={fragments}
+              phase={phase}
+              currentCall={currentCall}
+              language={language}
+              onCopy={handleCopy}
+              copyState={copyState}
+            />
+          </div>
+        </div>
+      </main>
+
+      <footer className="max-w-6xl mx-auto px-4 sm:px-6 pb-8 pt-2 text-center text-xs text-ink/40">
+        Concept A — cartellone tradizionale · prototipo con dati mock, nessuna API collegata.
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);

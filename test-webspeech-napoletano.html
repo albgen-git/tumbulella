@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Test Web Speech API — Napoletano</title>
+<style>
+  body {
+    font-family: -apple-system, system-ui, sans-serif;
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background: #0a1628;
+    color: #e8eef5;
+  }
+  h1 { font-size: 1.4rem; color: #4fc3e8; }
+  p.hint { color: #9fb3c8; font-size: 0.9rem; line-height: 1.5; }
+  textarea {
+    width: 100%;
+    height: 90px;
+    box-sizing: border-box;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #2a4a68;
+    background: #0f2138;
+    color: #e8eef5;
+    font-size: 1rem;
+    resize: vertical;
+  }
+  select, button {
+    font-size: 0.95rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #2a4a68;
+    background: #0f2138;
+    color: #e8eef5;
+    margin-top: 10px;
+  }
+  select { width: 100%; }
+  button {
+    background: #1a7fb0;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+  button:hover { background: #2493c9; }
+  .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .row button { flex: 1; min-width: 140px; }
+  .voice-info {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: #9fb3c8;
+    background: #0f2138;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #2a4a68;
+  }
+  .count { color: #4fc3e8; font-weight: 600; }
+  label { font-size: 0.85rem; color: #9fb3c8; display: block; margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<h1>🎙️ Test Web Speech API — Napoletano</h1>
+<p class="hint">
+  Non esiste un codice lingua "napoletano" ufficiale nei browser: il test qui sotto
+  prova diverse frasi con voci "it-IT" disponibili sul tuo dispositivo, così puoi
+  sentire quanto reggono la pronuncia dialettale. Il risultato varia molto tra
+  browser/sistema operativo (Chrome, Safari e Edge usano motori vocali diversi).
+</p>
+
+<label for="text">Testo da leggere</label>
+<textarea id="text">Cinche, 'a mano. Vediamo nu poco 'sta mano 'e chi è.</textarea>
+
+<label for="voice">Voce disponibile (filtrate per italiano quando possibile)</label>
+<select id="voice"></select>
+
+<div class="row">
+  <button onclick="speak()">▶️ Ascolta</button>
+  <button onclick="stop()">⏹️ Stop</button>
+  <button onclick="tryPreset(0)">Frase 1</button>
+  <button onclick="tryPreset(1)">Frase 2</button>
+  <button onclick="tryPreset(2)">Frase 3</button>
+</div>
+
+<div class="voice-info" id="info">Caricamento voci disponibili...</div>
+
+<script>
+const presets = [
+  "Cinche, 'a mano. Vediamo nu poco 'sta mano 'e chi è.",
+  "Diece! Ma chesta è 'a mano 'e Maradona! 'A mano 'e Dio!",
+  "Ottanta, 'a vocca. Chiudite 'a vocca ca mo vene 'a sorpresa."
+];
+
+function tryPreset(i) {
+  document.getElementById('text').value = presets[i];
+}
+
+let voices = [];
+
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  const select = document.getElementById('voice');
+  const info = document.getElementById('info');
+  select.innerHTML = '';
+
+  // Metti per prime le voci italiane, poi tutte le altre
+  const italian = voices.filter(v => v.lang.toLowerCase().startsWith('it'));
+  const others = voices.filter(v => !v.lang.toLowerCase().startsWith('it'));
+  const ordered = [...italian, ...others];
+
+  ordered.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = voices.indexOf(v);
+    opt.textContent = `${v.name} (${v.lang})${v.localService ? ' — locale' : ' — remota'}`;
+    select.appendChild(opt);
+  });
+
+  info.innerHTML = `Voci italiane trovate: <span class="count">${italian.length}</span> · 
+    Voci totali sul dispositivo: <span class="count">${voices.length}</span><br>
+    ${italian.length === 0 ? '⚠️ Nessuna voce italiana trovata su questo dispositivo/browser — prova un altro browser o sistema.' : 'Prova più voci italiane: la qualità sul napoletano varia molto anche tra voci dello stesso motore.'}`;
+}
+
+function speak() {
+  const text = document.getElementById('text').value;
+  const select = document.getElementById('voice');
+  const idx = select.value;
+  if (idx === '') { alert('Nessuna voce disponibile su questo browser.'); return; }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.voice = voices[idx];
+  utterance.lang = voices[idx].lang;
+  utterance.rate = 0.95;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance);
+}
+
+function stop() {
+  speechSynthesis.cancel();
+}
+
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,492 @@
+// NOTA: questo file NON viene caricato direttamente da index.html.
+// Babel standalone carica gli script esterni via XHR, che i browser bloccano
+// per CORS quando la pagina è aperta con file:// — per questo il codice qui
+// sotto è duplicato inline dentro <script type="text/babel"> in index.html.
+// Tenuto qui solo come sorgente leggibile: se lo modifichi, aggiorna anche
+// il blocco corrispondente in index.html (o chiedi a Claude di farlo).
+const { useState, useRef, useEffect, useCallback } = React;
+
+// ---------- Icone ----------
+// Vesuvio "logo", stessa illustrazione folk usata in Concept A (colori invariati
+// per coerenza tra i due concept, anche se la palette qui è diversa).
+function VesuvioIcon({ className }) {
+  return (
+    <svg viewBox="0 0 100 60" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 54 L34 12 L42 24 L50 8 L96 54 Z" fill="#c1553b" stroke="#2b2622" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M42 24 L50 8 L58 22" stroke="#2b2622" strokeWidth="2.5" strokeLinejoin="round" fill="#e0a93e" />
+      <path d="M46 16 q4 -8 10 -4" stroke="#2b2622" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+// ---------- Sticker decorativi flat/playful (finestra racconto vuota) ----------
+// Cornetto portafortuna: corno sottile e allungato (non un blob tondo/pomodoro).
+function CornettoSticker({ className }) {
+  return (
+    <svg viewBox="0 0 70 90" className={className} xmlns="http://www.w3.org/2000/svg">
+      <circle cx="35" cy="45" r="34" fill="#eaf7ff" />
+      <path
+        d="M34 16c5 1 9 6 8 12-1 5-4 8-4 13 0 4 2 7 1 12-1 6-4 11-4 17-1 6-3 11-3 15-2-5-4-10-4-16 0-5 2-9 2-14 0-4-2-7-1-11 1-6 4-9 4-14 0-5-1-10 1-14Z"
+        fill="#ff6b52"
+        stroke="#0c5c94"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      <circle cx="33" cy="17" r="3" fill="none" stroke="#0c5c94" strokeWidth="2.2" />
+      <path d="M31 30q-3 14 0 26" stroke="#ffffff" strokeWidth="1.6" fill="none" strokeLinecap="round" opacity="0.65" />
+    </svg>
+  );
+}
+// Pulcinella: cappello a punta bianco + mascherina nera "a fascia" con naso a becco.
+// Forme semplici apposta, per restare leggibili anche piccole.
+function PulcinellaSticker({ className }) {
+  return (
+    <svg viewBox="0 0 70 90" className={className} xmlns="http://www.w3.org/2000/svg">
+      <circle cx="35" cy="45" r="34" fill="#ffe27a" />
+      <path d="M35 11 L49 40 L21 40 Z" fill="#ffffff" stroke="#0c5c94" strokeWidth="2.3" strokeLinejoin="round" />
+      <circle cx="35" cy="11" r="2.6" fill="#ffffff" stroke="#0c5c94" strokeWidth="2" />
+      <circle cx="35" cy="55" r="18" fill="#ffffff" stroke="#0c5c94" strokeWidth="2.3" />
+      <rect x="21" y="47" width="28" height="9" rx="4.5" fill="#0c5c94" />
+      <path d="M40 49 L52 55 L40 59 Z" fill="#0c5c94" />
+      <circle cx="28" cy="51.5" r="1.6" fill="#ffe27a" />
+      <circle cx="42" cy="51.5" r="1.6" fill="#ffe27a" />
+      <path d="M29 68q6 4 12 0" stroke="#0c5c94" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+// 'O ciucciariello: musetto frontale con le tipiche orecchie a penzoloni ai
+// lati (grigie, per non confondersi con un coniglio) e musetto chiaro con narici.
+function CiuccioSticker({ className }) {
+  return (
+    <svg viewBox="0 0 90 70" className={className} xmlns="http://www.w3.org/2000/svg">
+      <circle cx="45" cy="35" r="34" fill="#8ff0d4" />
+      <ellipse cx="18" cy="31" rx="8" ry="16" fill="#d7dee3" stroke="#0c5c94" strokeWidth="2.3" transform="rotate(-25 18 31)" />
+      <ellipse cx="72" cy="31" rx="8" ry="16" fill="#d7dee3" stroke="#0c5c94" strokeWidth="2.3" transform="rotate(25 72 31)" />
+      <ellipse cx="45" cy="40" rx="20" ry="18" fill="#ffffff" stroke="#0c5c94" strokeWidth="2.3" />
+      <path d="M40 19q5-6 10 0" stroke="#0c5c94" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <ellipse cx="45" cy="53" rx="12" ry="8.5" fill="#f0f3f5" stroke="#0c5c94" strokeWidth="2" />
+      <circle cx="40" cy="54" r="1.6" fill="#0c5c94" />
+      <circle cx="50" cy="54" r="1.6" fill="#0c5c94" />
+      <circle cx="36" cy="35" r="2.2" fill="#0c5c94" />
+      <circle cx="54" cy="35" r="2.2" fill="#0c5c94" />
+    </svg>
+  );
+}
+
+// ---------- UI ----------
+function IntensitySelector({ intensity, setIntensity, disabled }) {
+  return (
+    <div
+      className={"bg-napoli-50 rounded-full p-1 flex gap-1 shrink-0 border border-napoli-100 " + (disabled ? "opacity-50" : "")}
+      title={disabled ? "Bloccato per tutta la partita — premi \"Nuova storia\" per cambiarlo" : undefined}
+    >
+      {["soft", "spinto"].map((level) => (
+        <button
+          key={level}
+          onClick={() => !disabled && setIntensity(level)}
+          disabled={disabled}
+          className={
+            "px-4 py-2 rounded-full text-sm font-bold transition-all " +
+            (disabled ? "cursor-not-allowed " : "") +
+            (intensity === level
+              ? level === "soft"
+                ? "bg-napoli-500 text-white shadow-md scale-105"
+                : "bg-coral-500 text-white shadow-md scale-105"
+              : "text-napoli-700/60 " + (disabled ? "" : "hover:text-napoli-700"))
+          }
+        >
+          {level === "soft" ? "🕊️ Soft" : "🌶️ Spinto"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function LanguageSelector({ language, setLanguage, disabled }) {
+  return (
+    <select
+      value={language}
+      onChange={(e) => setLanguage(e.target.value)}
+      disabled={disabled}
+      title={disabled ? "Bloccato per tutta la partita — premi \"Nuova storia\" per cambiarlo" : undefined}
+      className={"lang-select bg-napoli-50 border border-napoli-100 rounded-full pl-4 pr-8 py-2 text-sm font-bold text-napoli-800 shrink-0 " + (disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
+      aria-label="Lingua del racconto"
+    >
+      {window.LANGUAGES.map((l) => (
+        <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+      ))}
+    </select>
+  );
+}
+
+// Finestra "Cosa è": legge il contenuto da window.ABOUT_CONTENT (src/data.js),
+// che a sua volta è estratto da cosa-e-tumbulella.docx — cambiando il testo lì
+// cambia anche quello mostrato qui, senza toccare questo componente.
+function AboutModal({ onClose, language }) {
+  const c = window.ABOUT_CONTENT[language] || window.ABOUT_CONTENT.nap;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-napoli-900/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="glass rounded-xl2 w-full max-w-lg max-h-[85vh] overflow-y-auto p-5 sm:p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <h2 className="font-display font-extrabold text-xl text-napoli-800">{c.title}</h2>
+          <button
+            onClick={onClose}
+            aria-label="Chiudi"
+            className="w-8 h-8 rounded-full bg-napoli-50 hover:bg-napoli-100 flex items-center justify-center text-napoli-700 shrink-0 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+        <p className="text-sm text-napoli-700/70 italic mb-4">{c.tagline}</p>
+        {c.sections.map((s, i) => (
+          <div key={i} className="mb-4 last:mb-0">
+            <h3 className="font-display font-bold text-base text-napoli-800 mb-1.5">{s.heading}</h3>
+            {s.blocks.map((b, j) => {
+              if (b.type === "list") {
+                return (
+                  <ul key={j} className="list-disc pl-5 space-y-1 text-sm text-napoli-900/80 mb-2">
+                    {b.items.map((it, k) => (
+                      <li key={k}>{it}</li>
+                    ))}
+                  </ul>
+                );
+              }
+              if (b.type === "h4") {
+                return (
+                  <p key={j} className="font-bold text-sm text-napoli-800 mt-2 mb-1">
+                    {b.text}
+                  </p>
+                );
+              }
+              return (
+                <p key={j} className="text-sm text-napoli-900/80 leading-relaxed mb-2">
+                  {b.text}
+                </p>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Stato del "banditore": chiamata (fase 1) -> pausa (si cerca il numero) -> narrazione (fase 2) -> idle.
+function NarratorStatus({ phase, currentCall, language }) {
+  const labels = window.STATUS_LABELS[language] || window.STATUS_LABELS.nap;
+  const active = phase === "calling" || phase === "narrando";
+  let text = labels.idle;
+  if (phase === "calling") text = "📢 " + currentCall;
+  else if (phase === "pausa") text = labels.pausa;
+  else if (phase === "narrando") text = labels.narrando;
+
+  return (
+    <div className={"flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors max-w-full " + (active ? "bg-mint-300 text-napoli-900" : phase === "pausa" ? "bg-lemon-300 text-napoli-900" : "bg-gray-100 text-gray-400")}>
+      <div className="flex items-end gap-0.5 h-3.5 w-5 shrink-0">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className={"w-1 rounded-full bg-napoli-700 " + (active ? "wave-dot" : phase === "pausa" ? "pulse-soft" : "")}
+            style={{ height: "100%", animationDelay: i * 0.12 + "s", opacity: active || phase === "pausa" ? 1 : 0.3 }}
+          />
+        ))}
+      </div>
+      <span className="truncate">{text}</span>
+    </div>
+  );
+}
+
+const CHIP_COLORS = ["bg-coral-500", "bg-lemon-500", "bg-mint-400", "bg-napoli-500"];
+
+function NumberCell({ n, extracted, order, onClick }) {
+  const color = CHIP_COLORS[n % CHIP_COLORS.length];
+  return (
+    <button
+      onClick={() => onClick(n)}
+      className={
+        "relative aspect-square rounded-xl2 flex items-center justify-center font-display font-bold text-sm sm:text-base transition-all " +
+        (extracted
+          ? color + " text-white shadow-lg cell-bounce"
+          : "bg-white text-napoli-800 border-2 border-napoli-100 hover:border-napoli-400 hover:-translate-y-0.5")
+      }
+    >
+      {n}
+      {extracted && (
+        <span className="absolute -top-1 -right-1 bg-white text-napoli-800 text-[9px] font-extrabold rounded-full w-4 h-4 flex items-center justify-center shadow">
+          {order}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function Board({ extractedSet, extractedOrder, onCellClick }) {
+  const numbers = Array.from({ length: 90 }, (_, i) => i + 1);
+  return (
+    <div className="glass rounded-xl2 p-4 sm:p-5 shadow-xl">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-bold text-lg text-napoli-800">'O Tabbellone</h2>
+        <span className="text-xs font-bold text-white bg-napoli-500 rounded-full px-2.5 py-1">{extractedOrder.length}/90</span>
+      </div>
+      <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
+        {numbers.map((n) => (
+          <NumberCell
+            key={n}
+            n={n}
+            extracted={extractedSet.has(n)}
+            order={extractedOrder.indexOf(n) + 1}
+            onClick={onCellClick}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StoryPanel({ fragments, phase, currentCall, language }) {
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [fragments.length, fragments.map((f) => f.text).join("|")]);
+
+  const emptyText = window.EMPTY_STATE_TEXT[language] || window.EMPTY_STATE_TEXT.nap;
+
+  return (
+    <div className="glass rounded-xl2 p-4 sm:p-5 shadow-xl flex flex-col h-full">
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <h2 className="font-display font-bold text-lg text-napoli-800">'O Racconto</h2>
+        <NarratorStatus phase={phase} currentCall={currentCall} language={language} />
+      </div>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pr-1 space-y-2.5 min-h-[220px] max-h-[420px]">
+        {fragments.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center gap-3 py-8">
+            <div className="flex gap-2 float">
+              <CiuccioSticker className="w-16" />
+              <PulcinellaSticker className="w-14" />
+              <CornettoSticker className="w-16" />
+            </div>
+            <p className="text-sm text-napoli-800/60 max-w-[220px] font-medium">{emptyText}</p>
+          </div>
+        ) : (
+          fragments.map((f, i) =>
+            f.text ? (
+              <div key={i} className="pop-in bg-napoli-50 rounded-2xl rounded-tl-sm px-4 py-2.5 text-[14px] leading-relaxed text-napoli-900">
+                <span className="font-display font-extrabold text-coral-500 mr-1">{f.n}</span>
+                {f.text}
+              </div>
+            ) : (
+              <div key={i} className="pop-in bg-napoli-50/60 rounded-2xl rounded-tl-sm px-4 py-2.5 text-[14px] leading-relaxed text-napoli-900/40 italic">
+                <span className="font-display font-extrabold text-coral-500/60 mr-1 not-italic">{f.n}</span>
+                <span className="pulse-soft">…</span>
+              </div>
+            )
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [intensity, setIntensity] = useState("soft");
+  const [language, setLanguage] = useState("it");
+  const [extractedOrder, setExtractedOrder] = useState([]);
+  const [fragments, setFragments] = useState([]); // { n, text: string|null } — null finché la fase 2 non è pronta
+  const [phase, setPhase] = useState("idle"); // idle | calling | pausa | narrando
+  const [currentCall, setCurrentCall] = useState(null);
+  const [muted, setMuted] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
+  const [voiceInfo, setVoiceInfo] = useState(null); // diagnostica TTS: nome voce usata nell'ultima lettura
+
+  const orderRef = useRef([]); // fonte di verità sincrona per l'ordine estratti
+  const storyRef = useRef([]); // pezzi di narrazione già generati dal backend, in ordine (senza il prefisso "numero, significato")
+  const queueRef = useRef([]); // coda dei numeri cliccati in attesa di "chiamata + narrazione"
+  const processingRef = useRef(false);
+  const sessionRef = useRef(0); // incrementato a ogni "nuova storia": invalida le sequenze in corso
+  const intensityRef = useRef(intensity);
+  const languageRef = useRef(language);
+  const mutedRef = useRef(muted);
+
+  useEffect(() => { intensityRef.current = intensity; }, [intensity]);
+  useEffect(() => { languageRef.current = language; }, [language]);
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
+
+  const extractedSet = new Set(extractedOrder);
+
+  function sleep(ms, session) {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(sessionRef.current === session), ms);
+    });
+  }
+
+  // Legge `text` ad alta voce (Web Speech API); se muto o non disponibile,
+  // ricade su una pausa fissa della stessa durata approssimativa di sempre.
+  async function speakOrWait(text, lang, fallbackMs, session) {
+    const spoke = await window.speak(text, lang, mutedRef.current);
+    if (sessionRef.current !== session) return false;
+    if (spoke) setVoiceInfo(window.__lastVoiceUsed || null);
+    if (!spoke) return sleep(fallbackMs, session);
+    return true;
+  }
+
+  // Riproduce la sequenza a due fasi di un numero: chiamata -> pausa -> narrazione.
+  // Ogni `await` verifica che la sessione sia ancora valida (nessun reset nel frattempo).
+  async function playSequence(item, session) {
+    const lang = languageRef.current;
+    const level = intensityRef.current;
+
+    setPhase("calling");
+    const callText = window.buildCall(item.n, lang);
+    setCurrentCall(callText);
+    if (!(await speakOrWait(callText, lang, window.TIMING.CALL_MS, session))) return;
+
+    setPhase("pausa");
+    if (!(await sleep(window.TIMING.PAUSE_MS, session))) return;
+
+    setPhase("narrando");
+    const prefix = window.buildPrefix(item.n, lang);
+    const previousNumbers = orderRef.current.slice(0, item.clickIndex);
+    let body;
+    try {
+      body = await window.fetchNarration(item.n, previousNumbers, storyRef.current, level, lang);
+    } catch (err) {
+      if (sessionRef.current !== session) return;
+      const errText =
+        err && err.kind === "backend_error"
+          ? (window.LLM_BACKEND_ERROR_PREFIX[lang] || window.LLM_BACKEND_ERROR_PREFIX.nap) + err.message + ")"
+          : window.LLM_UNREACHABLE_TEXT[lang] || window.LLM_UNREACHABLE_TEXT.nap;
+      setFragments((prev) => prev.map((f) => (f.n === item.n ? { ...f, text: prefix + errText } : f)));
+      setPhase("idle");
+      setCurrentCall(null);
+      return;
+    }
+    if (sessionRef.current !== session) return;
+    storyRef.current = [...storyRef.current, body];
+    const text = prefix + body;
+    setFragments((prev) => prev.map((f) => (f.n === item.n ? { ...f, text } : f)));
+    // Si legge solo "body": "numero, significato" l'ha già detto la fase 1 (chiamata).
+    if (!(await speakOrWait(body, lang, window.TIMING.NARRATION_MS, session))) return;
+
+    setPhase("idle");
+    setCurrentCall(null);
+  }
+
+  // Coda sequenziale: se si cliccano più numeri di fila, le chiamate si accodano
+  // invece di accavallarsi (come farebbe un solo banditore dal vivo).
+  async function processQueue(session) {
+    if (processingRef.current) return;
+    processingRef.current = true;
+    while (queueRef.current.length > 0 && sessionRef.current === session) {
+      const item = queueRef.current.shift();
+      await playSequence(item, session);
+    }
+    processingRef.current = false;
+  }
+
+  const handleCellClick = useCallback((n) => {
+    if (orderRef.current.includes(n)) return;
+    const clickIndex = orderRef.current.length;
+    const prevNum = clickIndex > 0 ? orderRef.current[clickIndex - 1] : null;
+    orderRef.current = [...orderRef.current, n];
+    setExtractedOrder(orderRef.current);
+    setFragments((prev) => [...prev, { n, text: null }]);
+    queueRef.current.push({ n, clickIndex, prevNum });
+    processQueue(sessionRef.current);
+  }, []);
+
+  const handleNewStory = () => {
+    sessionRef.current += 1;
+    window.stopSpeaking();
+    orderRef.current = [];
+    storyRef.current = [];
+    queueRef.current = [];
+    processingRef.current = false;
+    setExtractedOrder([]);
+    setFragments([]);
+    setPhase("idle");
+    setCurrentCall(null);
+  };
+
+  return (
+    <div className="min-h-screen pb-8">
+      <header className="sticky top-0 z-10 backdrop-blur bg-white/10 border-b border-white/20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md float p-1.5 shrink-0">
+              <VesuvioIcon className="w-full" />
+            </div>
+            <div>
+              <h1 className="font-display font-extrabold text-2xl text-white drop-shadow leading-none">Tumbulella</h1>
+              <p className="text-[11px] text-white/70 tracking-wide">'a smorfia ca cunta 'e storie</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setShowAbout(true)}
+              title="Cosa è Tumbulella"
+              className="px-3.5 h-11 rounded-full bg-white shadow-md flex items-center gap-1.5 text-sm font-bold text-napoli-700 hover:scale-105 active:scale-95 transition-transform shrink-0"
+            >
+              ❓ Cosa è
+            </button>
+            <LanguageSelector language={language} setLanguage={setLanguage} disabled={extractedOrder.length > 0} />
+            <IntensitySelector intensity={intensity} setIntensity={setIntensity} disabled={extractedOrder.length > 0} />
+            <button
+              onClick={() => {
+                const next = !muted;
+                setMuted(next);
+                if (next) window.stopSpeaking();
+              }}
+              title={muted ? "Riattiva la voce" : "Disattiva la voce"}
+              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
+            >
+              {muted ? "🔇" : "🔊"}
+            </button>
+            <button
+              onClick={handleNewStory}
+              className="px-4 py-2.5 rounded-full bg-white text-napoli-700 text-sm font-bold shadow-md hover:scale-105 active:scale-95 transition-transform"
+            >
+              🔄 Nuova storia
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {voiceInfo && (
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-2">
+          <p className="text-[11px] text-white/70 text-center sm:text-left">
+            🔊 Ultima voce usata: <span className="font-bold text-white">{voiceInfo}</span>
+          </p>
+        </div>
+      )}
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div className="grid lg:grid-cols-5 gap-5">
+          <div className="lg:col-span-3">
+            <Board extractedSet={extractedSet} extractedOrder={extractedOrder} onCellClick={handleCellClick} />
+          </div>
+          <div className="lg:col-span-2">
+            <StoryPanel
+              fragments={fragments}
+              phase={phase}
+              currentCall={currentCall}
+              language={language}
+            />
+          </div>
+        </div>
+      </main>
+
+      <footer className="max-w-6xl mx-auto px-4 sm:px-6 text-center text-xs text-white/70">
+        Concept B — playful app · racconto generato da Gemini via backend locale (dev).
+      </footer>
+
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} language={language} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
