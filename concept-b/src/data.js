@@ -379,7 +379,7 @@ window.BACKEND_URL = (function () {
   if (!h || h === "localhost" || h === "127.0.0.1") {
     return "http://127.0.0.1:8000";
   }
-  return "https://IMPOSTA-QUI-URL-BACKEND-PUBBLICO";
+  return "https://tumbulella.onrender.com";
 })();
 
 // Due errori ben distinti: il backend non risponde affatto (server spento,
