@@ -18,15 +18,15 @@ Le cartelle della tombola napoletana e la Smorfia sono un patrimonio culturale v
 3. **Narrazione incrementale a due fasi**: alla pressione di un numero, il sistema procede in due tempi distinti, per lasciare il tempo di cercare il numero sulla propria cartella (come nella tombola tradizionale):
    - **Fase 1 (immediata)**: viene letto ad alta voce solo il numero e il suo nome secondo la Smorfia (es. "Cinque, la mano"). Questa fase non richiede l'LLM: è un semplice lookup nella tavola Smorfia + audio, quindi è istantanea.
    - **Pausa** (qualche secondo, per dare il tempo di controllare la cartella).
-   - **Fase 2 (narrazione)**: dopo una decina di secondi, viene letta la porzione di racconto generata dall'LLM che lega il numero appena uscito al filo narrativo della partita in corso (es. "Ma cosa fa questa mano? Di chi è?"... e al numero successivo, "Questa è la mano di Maradona allora!"). Questo tempo di attesa dà margine sufficiente al motore LLM per comporre la frase con calma, senza fretta.
+   - **Fase 2 (narrazione)**: viene letta la porzione di racconto generata dall'LLM che lega il numero appena uscito al filo narrativo della partita in corso (es. "Ma cosa fa questa mano? Di chi è?"... e al numero successivo, "Questa è la mano di Maradona allora!"). Questo tempo di attesa dà margine sufficiente al motore LLM per comporre la frase con calma, senza fretta.
    
    Questo flusso a due fasi rende la latenza della generazione testo/audio molto meno critica rispetto a una risposta istantanea: i circa 10 secondi di pausa naturale tra numero e narrazione sono già un margine di tempo utile per la chiamata LLM + TTS.
-4. **Selettore di intensità**: slider o toggle con almeno 2 livelli (soft / spinto) che modifica il prompt e quindi il tono del testo generato, valido per tutta la partita in corso.
-5. **"Inizia una nuova storia"**: pulsante che azzera il contesto narrativo accumulato (numeri estratti + testo generato finora) e permette di iniziare una nuova partita da zero, con tabellone pulito.
-6. **Condivisione**: a fine partita (o in qualunque momento), pulsante per copiare o condividere il testo accumulato fino a quel momento.
-7. **Selettore di lingua**: menu con 4 opzioni — Napoletano, Italiano, Inglese, Spagnolo — che determina la lingua sia del testo generato sia della voce usata per leggerlo. Il Napoletano resta la lingua "identitaria" del progetto; le altre servono ad allargare la fruibilità (es. turisti, pubblico internazionale, o chi capisce la storia ma non il dialetto).
-8. **Pulsante "Cosa è"**: apre un testo informativo statico (non generato dall'LLM) che spiega: che Tumbulella è un supporto per rendere la tombola tra amici più divertente, non un gioco completo a sé; cos'è la tombola e come si gioca; la storia della Smorfia/Cabala a Napoli. Il testo di riferimento è già pronto in `docs/cosa-e-tumbulella.docx`.
-9. **Pulsante "!" (esortazione)**: pensato per i momenti di silenzio tra un numero e l'altro. Alla pressione, recita ad alta voce una frase di esortazione scelta a caso (es. "Datevi una mossa", "Forza ragazzi"), nella lingua attiva del menu. Anche queste frasi sono statiche (nessuna chiamata LLM, mai inviate al motore di narrazione) e **non compaiono nella finestra di testo della storia** — sono un elemento separato, puramente di intrattenimento/animazione, non parte del racconto. I file di riferimento sono in `docs/reference/frasi-pazze-{lingua}.txt` (uno per ciascuna delle 4 lingue del menu).
+
+4. **"Inizia una nuova storia"**: pulsante che azzera il contesto narrativo accumulato (numeri estratti + testo generato finora) e permette di iniziare una nuova partita da zero, con tabellone pulito.
+
+5. **Selettore di lingua**: menu con 4 opzioni — Napoletano, Italiano, Inglese, Spagnolo — che determina la lingua sia del testo generato sia della voce usata per leggerlo. Il Napoletano resta la lingua "identitaria" del progetto; le altre servono ad allargare la fruibilità (es. turisti, pubblico internazionale, o chi capisce la storia ma non il dialetto).
+6. **Pulsante "Cosa è"**: apre un testo informativo statico (non generato dall'LLM) che spiega: che Tumbulella è un supporto per rendere la tombola tra amici più divertente, non un gioco completo a sé; cos'è la tombola e come si gioca; la storia della Smorfia/Cabala a Napoli. Il testo di riferimento è già pronto in `docs/cosa-e-tumbulella.docx`.
+7. **Pulsante "!" (esortazione)**: pensato per i momenti di silenzio tra un numero e l'altro. Alla pressione, recita ad alta voce una frase di esortazione scelta a caso (es. "Datevi una mossa", "Forza ragazzi"), nella lingua attiva del menu. Anche queste frasi sono statiche (nessuna chiamata LLM, mai inviate al motore di narrazione) e **non compaiono nella finestra di testo della storia** — sono un elemento separato, puramente di intrattenimento/animazione, non parte del racconto. I file di riferimento sono in `docs/reference/frasi-pazze-{lingua}.txt` (uno per ciascuna delle 4 lingue del menu).
 
 ## Fuori scope per l'MVP (esplicitamente escluso)
 - Account utente, login, storico personale delle storie generate.
@@ -35,7 +35,7 @@ Le cartelle della tombola napoletana e la Smorfia sono un patrimonio culturale v
 - Abbonamenti o pagamenti utente (la monetizzazione MVP è solo pubblicitaria, vedi sezione dedicata).
 - Un pacchetto "white label"/licenza dedicata per case di riposo o villaggi turistici (per ora usano lo stesso sito pubblico; un'eventuale versione dedicata è una fase successiva).
 - Traduzione automatica italiano↔napoletano per input arbitrario dell'utente (solo output generato, non un traduttore generico).
-- Moderazione avanzata dei contenuti oltre al semplice selettore soft/spinto.
+
 
 ## Identità visiva
 - Colore distintivo: azzurro Napoli, presente in tutte le varianti/concept come elemento comune riconoscibile.

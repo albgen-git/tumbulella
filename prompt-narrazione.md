@@ -23,7 +23,6 @@ Per le parole successive, scegli sempre almeno quattro parole, scegliendo quelle
 - Se dalle ultime due frasi si individuano meno di 4 parole utilizzabili, collega tutte quelle disponibili.
 - Puoi scartare AL MASSIMO UNA parola per turno (mai di più), se non si presta bene a questa frase.
 - Metti in **grassetto** (markdown, doppio asterisco) ogni parola Smorfia che è uscita e che usi nella frase — è l'unico markdown consentito, non usarne altro.
-- Ogni tanto, quando esce una parola strana, inserisci una domanda iniziale del tipo "E cosa c'entra con questa storia?" oppure "Cosa ci facciamo?" prima di comunque usarla nella frase che segue — non farlo ad ogni turno.
 - Chiudi SEMPRE la frase con una domanda che apre al numero successivo (es. "e cosa fanno?", "ma dove andranno?", "cosa succederà adesso?").
 - Frasi brevi, umoristiche, pensate per essere lette AD ALTA VOCE dal vivo, con il ritmo scherzoso e un po' teatrale del vero botta-e-risposta delle tombolelle di quartiere.
 - Non spiegare cosa stai facendo, non mettere l'intero testo tra virgolette (solo il discorso diretto interno, se lo usi).
