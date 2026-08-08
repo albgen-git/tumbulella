@@ -2,7 +2,7 @@
 secondo numero in poi — il primo numero non chiama l'LLM, vedi app/main.py e
 app/frasi_iniziali.py).
 
-Design del contesto secondo prompt-narrazione_1.md (vedi root del repo): NON
+Design del contesto secondo prompt-narrazione.md (vedi root del repo): NON
 si manda mai una cronologia che cresce — solo le ULTIME DUE frasi generate
 (non l'intera narrazione precedente) + la parola nuova. Il modello deduce da
 solo, leggendo quelle due frasi, quali parole recenti sono ancora "in gioco".

@@ -2,7 +2,7 @@
 
 Nessun database: il contesto della partita (numeri usciti, racconto fin qui)
 viene mandato dal frontend a ogni chiamata, come da architettura scelta in
-requirements_1.md per non introdurre persistenza nell'MVP.
+requirements.md per non introdurre persistenza nell'MVP.
 """
 
 from dotenv import load_dotenv
@@ -76,14 +76,14 @@ def narrate(req: NarrateRequest) -> NarrateResponse:
     call = f"{req.number}, {meaning}"
 
     # Fase 2 — narrazione. Primo numero della partita: nessuna chiamata LLM,
-    # si pesca una frase statica da frasi-iniziali.txt (istantaneo, gratis).
+    # si pesca una frase statica da frasi-iniziali-{lingua}.txt (istantaneo, gratis).
     if not req.previous_sentences:
-        narration = frasi_iniziali.random_frase_iniziale()
+        narration = frasi_iniziali.random_frase_iniziale(req.language)
         return NarrateResponse(number=req.number, call=call, narration=narration)
 
     # Dal secondo numero in poi: contesto a costo pressoché costante (non
     # cresce con la partita) — solo le ultime due frasi generate, vedi
-    # prompt-narrazione_1.md.
+    # prompt-narrazione.md.
     system_prompt = prompts.build_system_prompt(req.language)
     user_prompt = prompts.build_user_prompt(req.number, req.previous_sentences, req.language)
     try:

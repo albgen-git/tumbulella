@@ -11,7 +11,7 @@ class NarrateRequest(BaseModel):
     number: int = Field(..., ge=1, le=90, description="Numero appena estratto")
     previous_sentences: list[str] = Field(
         default_factory=list,
-        description="Ultime due frasi generate (non l'intera storia) — contesto a costo pressoché costante, vedi prompt-narrazione_1.md. Vuoto al primo numero della partita.",
+        description="Ultime due frasi generate (non l'intera storia) — contesto a costo pressoché costante, vedi prompt-narrazione.md. Vuoto al primo numero della partita.",
     )
     previous_numbers: list[int] = Field(
         default_factory=list,
@@ -23,7 +23,7 @@ class NarrateRequest(BaseModel):
 class NarrateResponse(BaseModel):
     number: int
     call: str  # Fase 1: solo "numero, significato" — lookup, non generato dal modello
-    narration: str  # Fase 2: al primo numero è una frase statica (frasi-iniziali.txt), poi generata dal modello
+    narration: str  # Fase 2: al primo numero è una frase statica (frasi-iniziali-{lingua}.txt), poi generata dal modello
 
 
 class SmorfiaEntry(BaseModel):

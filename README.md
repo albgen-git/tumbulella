@@ -1,6 +1,6 @@
 # Tumbulella — Frontend Concepts (prototipo)
 
-Due varianti di frontend per la vista principale di gioco di Tumbulella, basate su [requirements_1.md](requirements_1.md) e sulla tabella Smorfia in [la_smorfia_dei_quartieri.pdf](la_smorfia_dei_quartieri.pdf) / [smorfia.json](smorfia.json).
+Due varianti di frontend per la vista principale di gioco di Tumbulella, basate su [requirements.md](requirements.md) e sulla tabella Smorfia in [la_smorfia_dei_quartieri.pdf](la_smorfia_dei_quartieri.pdf) / [smorfia.json](smorfia.json).
 
 > **Concept B è quello adottato** (direzione playful/moderna). Concept A resta nel repo come riferimento/alternativa ma non riceve più aggiornamenti attivi.
 >
@@ -28,7 +28,7 @@ concept-x/
   src/app.jsx      # copia leggibile dei componenti React (non caricata direttamente, vedi nota sopra)
 ```
 
-Entrambi implementano le stesse funzionalità richieste per la vista di gioco (v2, vedi requirements_1.md):
+Entrambi implementano le stesse funzionalità richieste per la vista di gioco (v2, vedi requirements.md):
 
 1. **Tabellone** 1-90 cliccabile, con stato "estratto" visivamente distinto e ordine di estrazione numerato.
 2. **Narrazione incrementale a due fasi**, come da nuovo requisito:
