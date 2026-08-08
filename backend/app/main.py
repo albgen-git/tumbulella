@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()  # legge backend/.env se presente, prima di leggere GEMINI_API_KEY
 
-from app import prompts, smorfia
+from app import frasi_iniziali, prompts, smorfia
 from app.llm_client import LLMNotConfiguredError, generate_narration, is_configured
 from app.models import HealthResponse, NarrateRequest, NarrateResponse, SmorfiaEntry
 
@@ -75,16 +75,25 @@ def narrate(req: NarrateRequest) -> NarrateResponse:
     meaning = entry["napoletano"] if req.language == "nap" else entry["italiano"]
     call = f"{req.number}, {meaning}"
 
-    # Fase 2 — narrazione: qui sì che serve il modello.
-    system_prompt = prompts.build_system_prompt(req.intensity, req.language)
-    user_prompt = prompts.build_user_prompt(
-        req.number, req.previous_numbers, req.story_so_far, req.intensity
-    )
+    # Fase 2 — narrazione. Primo numero della partita: nessuna chiamata LLM,
+    # si pesca una frase statica da frasi-iniziali.txt (istantaneo, gratis).
+    if not req.previous_sentences:
+        narration = frasi_iniziali.random_frase_iniziale()
+        return NarrateResponse(number=req.number, call=call, narration=narration)
+
+    # Dal secondo numero in poi: contesto a costo pressoché costante (non
+    # cresce con la partita) — solo le ultime due frasi generate, vedi
+    # prompt-narrazione_1.md.
+    system_prompt = prompts.build_system_prompt(req.language)
+    user_prompt = prompts.build_user_prompt(req.number, req.previous_sentences, req.language)
     try:
         narration = generate_narration(system_prompt, user_prompt)
     except LLMNotConfiguredError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:  # errori di rete/API Gemini
         raise HTTPException(status_code=502, detail=f"Errore nella generazione: {e}") from e
+
+    # Grassetto applicato qui, non lasciato al modello — vedi bold_smorfia_words.
+    narration = prompts.bold_smorfia_words(narration, req.previous_numbers + [req.number], req.language)
 
     return NarrateResponse(number=req.number, call=call, narration=narration)

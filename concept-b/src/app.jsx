@@ -73,34 +73,6 @@ function CiuccioSticker({ className }) {
 }
 
 // ---------- UI ----------
-function IntensitySelector({ intensity, setIntensity, disabled }) {
-  return (
-    <div
-      className={"bg-napoli-50 rounded-full p-1 flex gap-1 shrink-0 border border-napoli-100 " + (disabled ? "opacity-50" : "")}
-      title={disabled ? "Bloccato per tutta la partita — premi \"Nuova storia\" per cambiarlo" : undefined}
-    >
-      {["soft", "spinto"].map((level) => (
-        <button
-          key={level}
-          onClick={() => !disabled && setIntensity(level)}
-          disabled={disabled}
-          className={
-            "px-4 py-2 rounded-full text-sm font-bold transition-all " +
-            (disabled ? "cursor-not-allowed " : "") +
-            (intensity === level
-              ? level === "soft"
-                ? "bg-napoli-500 text-white shadow-md scale-105"
-                : "bg-coral-500 text-white shadow-md scale-105"
-              : "text-napoli-700/60 " + (disabled ? "" : "hover:text-napoli-700"))
-          }
-        >
-          {level === "soft" ? "🕊️ Soft" : "🌶️ Spinto"}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function LanguageSelector({ language, setLanguage, disabled }) {
   return (
     <select
@@ -248,6 +220,14 @@ function Board({ extractedSet, extractedOrder, onCellClick }) {
   );
 }
 
+// Renderizza un testo con marcatori **grassetto** (usati dal backend per le
+// parole Smorfia citate) come <strong>, senza dover parsare markdown generico.
+function BoldText({ text }) {
+  return window.splitBoldSegments(text).map((seg, i) =>
+    seg.bold ? <strong key={i}>{seg.text}</strong> : <span key={i}>{seg.text}</span>
+  );
+}
+
 function StoryPanel({ fragments, phase, currentCall, language }) {
   const scrollRef = useRef(null);
   useEffect(() => {
@@ -277,7 +257,7 @@ function StoryPanel({ fragments, phase, currentCall, language }) {
             f.text ? (
               <div key={i} className="pop-in bg-napoli-50 rounded-2xl rounded-tl-sm px-4 py-2.5 text-[14px] leading-relaxed text-napoli-900">
                 <span className="font-display font-extrabold text-coral-500 mr-1">{f.n}</span>
-                {f.text}
+                <BoldText text={f.text} />
               </div>
             ) : (
               <div key={i} className="pop-in bg-napoli-50/60 rounded-2xl rounded-tl-sm px-4 py-2.5 text-[14px] leading-relaxed text-napoli-900/40 italic">
@@ -293,7 +273,6 @@ function StoryPanel({ fragments, phase, currentCall, language }) {
 }
 
 function App() {
-  const [intensity, setIntensity] = useState("soft");
   const [language, setLanguage] = useState("it");
   const [extractedOrder, setExtractedOrder] = useState([]);
   const [fragments, setFragments] = useState([]); // { n, text: string|null } — null finché la fase 2 non è pronta
@@ -301,18 +280,15 @@ function App() {
   const [currentCall, setCurrentCall] = useState(null);
   const [muted, setMuted] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [voiceInfo, setVoiceInfo] = useState(null); // diagnostica TTS: nome voce usata nell'ultima lettura
 
   const orderRef = useRef([]); // fonte di verità sincrona per l'ordine estratti
-  const storyRef = useRef([]); // pezzi di narrazione già generati dal backend, in ordine (senza il prefisso "numero, significato")
+  const lastSentencesRef = useRef([]); // ultime due frasi generate dal backend (FIFO) — unico contesto mandato indietro, costo pressoché costante per tutta la partita
   const queueRef = useRef([]); // coda dei numeri cliccati in attesa di "chiamata + narrazione"
   const processingRef = useRef(false);
   const sessionRef = useRef(0); // incrementato a ogni "nuova storia": invalida le sequenze in corso
-  const intensityRef = useRef(intensity);
   const languageRef = useRef(language);
   const mutedRef = useRef(muted);
 
-  useEffect(() => { intensityRef.current = intensity; }, [intensity]);
   useEffect(() => { languageRef.current = language; }, [language]);
   useEffect(() => { mutedRef.current = muted; }, [muted]);
 
@@ -329,7 +305,6 @@ function App() {
   async function speakOrWait(text, lang, fallbackMs, session) {
     const spoke = await window.speak(text, lang, mutedRef.current);
     if (sessionRef.current !== session) return false;
-    if (spoke) setVoiceInfo(window.__lastVoiceUsed || null);
     if (!spoke) return sleep(fallbackMs, session);
     return true;
   }
@@ -338,7 +313,6 @@ function App() {
   // Ogni `await` verifica che la sessione sia ancora valida (nessun reset nel frattempo).
   async function playSequence(item, session) {
     const lang = languageRef.current;
-    const level = intensityRef.current;
 
     setPhase("calling");
     const callText = window.buildCall(item.n, lang);
@@ -351,9 +325,9 @@ function App() {
     setPhase("narrando");
     const prefix = window.buildPrefix(item.n, lang);
     const previousNumbers = orderRef.current.slice(0, item.clickIndex);
-    let body;
+    let narration;
     try {
-      body = await window.fetchNarration(item.n, previousNumbers, storyRef.current, level, lang);
+      narration = await window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
     } catch (err) {
       if (sessionRef.current !== session) return;
       const errText =
@@ -366,11 +340,21 @@ function App() {
       return;
     }
     if (sessionRef.current !== session) return;
-    storyRef.current = [...storyRef.current, body];
-    const text = prefix + body;
+    // Al turno 1 la frase statica (frasi-iniziali.txt) è generica e non
+    // menziona la parola vera — senza questo arricchimento, sparirebbe dal
+    // contesto e non sarebbe mai più recuperabile dal modello. Si arricchisce
+    // solo ciò che va in memoria per i turni successivi, MAI ciò che si vede
+    // o si sente ora (eviterebbe di ripetere il numero appena annunciato).
+    const isFirstTurn = previousNumbers.length === 0;
+    const memorized = isFirstTurn ? window.meaningOnly(item.n, lang) + ". " + narration : narration;
+    // FIFO di lunghezza 2: tiene solo le ultime due frasi generate.
+    lastSentencesRef.current = [...lastSentencesRef.current, memorized].slice(-2);
+    const text = prefix + narration;
     setFragments((prev) => prev.map((f) => (f.n === item.n ? { ...f, text } : f)));
-    // Si legge solo "body": "numero, significato" l'ha già detto la fase 1 (chiamata).
-    if (!(await speakOrWait(body, lang, window.TIMING.NARRATION_MS, session))) return;
+    // Si legge solo la narrazione (non "numero, significato", già detto in fase 1),
+    // ripulita dai marcatori **grassetto** che qui servono solo a schermo, non al TTS.
+    const spokenText = narration.replace(/\*\*(.+?)\*\*/g, "$1");
+    if (!(await speakOrWait(spokenText, lang, window.TIMING.NARRATION_MS, session))) return;
 
     setPhase("idle");
     setCurrentCall(null);
@@ -403,13 +387,21 @@ function App() {
     sessionRef.current += 1;
     window.stopSpeaking();
     orderRef.current = [];
-    storyRef.current = [];
+    lastSentencesRef.current = [];
     queueRef.current = [];
     processingRef.current = false;
     setExtractedOrder([]);
     setFragments([]);
     setPhase("idle");
     setCurrentCall(null);
+  };
+
+  // Pulsante "!" — esortazione buffa per i momenti morti tra un numero e
+  // l'altro. Frase statica (mai LLM, mai narrazione), solo letta ad alta
+  // voce: non tocca fragments/story, non entra in coda con chiamata/narrazione.
+  const handleExclamation = () => {
+    if (muted) return;
+    window.speak(window.pickRandomExclamation(language), language, false);
   };
 
   return (
@@ -434,7 +426,6 @@ function App() {
               ❓ Cosa è
             </button>
             <LanguageSelector language={language} setLanguage={setLanguage} disabled={extractedOrder.length > 0} />
-            <IntensitySelector intensity={intensity} setIntensity={setIntensity} disabled={extractedOrder.length > 0} />
             <button
               onClick={() => {
                 const next = !muted;
@@ -447,6 +438,17 @@ function App() {
               {muted ? "🔇" : "🔊"}
             </button>
             <button
+              onClick={handleExclamation}
+              disabled={muted}
+              title={muted ? "Riattiva la voce per usare l'esortazione" : "Un po' di sveglia per tutti!"}
+              className={
+                "w-11 h-11 rounded-full shadow-md flex items-center justify-center text-lg font-display font-extrabold transition-transform shrink-0 " +
+                (muted ? "bg-white/50 text-napoli-700/40 cursor-not-allowed" : "bg-lemon-400 text-napoli-900 hover:scale-105 active:scale-95")
+              }
+            >
+              !
+            </button>
+            <button
               onClick={handleNewStory}
               className="px-4 py-2.5 rounded-full bg-white text-napoli-700 text-sm font-bold shadow-md hover:scale-105 active:scale-95 transition-transform"
             >
@@ -455,14 +457,6 @@ function App() {
           </div>
         </div>
       </header>
-
-      {voiceInfo && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-2">
-          <p className="text-[11px] text-white/70 text-center sm:text-left">
-            🔊 Ultima voce usata: <span className="font-bold text-white">{voiceInfo}</span>
-          </p>
-        </div>
-      )}
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid lg:grid-cols-5 gap-5">

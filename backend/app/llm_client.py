@@ -7,20 +7,20 @@ import os
 from google import genai
 from google.genai import types
 
-# "Flash": modello economico/veloce, adatto a frammenti brevi generati ad
-# ogni click. Costante separata così è facile da cambiare in un punto solo,
-# o sovrascrivere con la variabile d'ambiente TUMBULELLA_MODEL.
-MODEL_NAME = os.getenv("TUMBULELLA_MODEL", "gemini-flash-latest")
-
-# Questo modello ragiona internamente ("thinking") prima di scrivere la
-# risposta visibile, e quel ragionamento consuma token dallo stesso budget
-# di max_output_tokens. thinking_budget=0 non è accettato da questo modello
-# (400 INVALID_ARGUMENT), quindi si lascia un budget esplicito e si tiene un
-# max_output_tokens ampio per avere comunque margine per il testo vero e
-# proprio anche quando il thinking sfora il budget indicato (osservato: fino
-# a ~850 token anche con budget=200).
-THINKING_BUDGET = 200
-MAX_OUTPUT_TOKENS = 4096
+# "Flash lite": modello economico/veloce, adatto a frammenti brevi generati
+# ad ogni click. Costante separata così è facile da cambiare in un punto
+# solo, o sovrascrivere con la variabile d'ambiente TUMBULELLA_MODEL.
+#
+# Scelto dopo un confronto reale (misurato, non stimato) con gemini-flash-latest
+# (alias di gemini-3.6-flash): quel modello RIFIUTA thinking_budget=0 e, anche
+# con un budget esplicito, consuma token di "pensiero" interno in modo
+# incostante (osservato 0-650 token extra a chiamata, fatturati come output).
+# gemini-3.1-flash-lite invece ACCETTA thinking_budget=0 ed è risultato a
+# zero token di pensiero su tutti i test fatti — circa 2,2x più economico a
+# chiamata a parità di prezzo per token, qualità del testo comparabile.
+MODEL_NAME = os.getenv("TUMBULELLA_MODEL", "gemini-3.1-flash-lite")
+THINKING_BUDGET = 0
+MAX_OUTPUT_TOKENS = 1024
 
 
 class LLMNotConfiguredError(RuntimeError):

@@ -245,6 +245,55 @@ window.EMPTY_STATE_TEXT = {
 };
 
 // ---------------------------------------------------------------------------
+// Pulsante "!" (esortazione): per i momenti di silenzio tra un numero e
+// l'altro. Frasi statiche (frasi-pazze-{lingua}.txt nella root del repo),
+// MAI generate dall'LLM e MAI mandate al motore di narrazione — pura
+// animazione/intrattenimento, non entrano nel racconto scritto né vengono
+// mostrate a schermo, solo lette ad alta voce.
+// ---------------------------------------------------------------------------
+window.EXCLAMATION_PHRASES = {
+  nap: [
+    "Jamm bell jamm", "Facimme ambress", "Datevi una mossa", "Forza ragazzi",
+    "Cercate 'e nun addurmi'", "Maronna mia", "Azz, ma qua state durmenno?", "Uagliù, sveglia!",
+    "Ma che aspettammo, 'o treno?", "Muovmmece, muovmmece", "E mo? Simme rimaste 'a mmiez' 'a via?",
+    "Uh, che silenzio, mannaggia", "Ma sti nummere s'hann''a piglià sule?", "Forza e curaggio",
+    "Jamme jamme, nun ce sta tiempo 'a perdere", "Chi dorme nun piglia pesce",
+    "Sveglia sveglia, ca simme a bbuono punto", "Azz, chi ha rubato 'a voce a tutte quante?",
+    "E mo parlate, no?", "Muoviteve, ca 'a tombola nun aspetta",
+  ],
+  it: [
+    "Dai, forza, andiamo", "Diamoci una mossa", "Forza ragazzi", "Cercate di non addormentarvi",
+    "Mamma mia", "Ehi, ma qui state dormendo?", "Sveglia, gente!", "Ma cosa aspettiamo, il treno?",
+    "Muoviamoci, muoviamoci", "E adesso? Siamo rimasti a metà strada?", "Che silenzio, mannaggia",
+    "Ma questi numeri si tirano fuori da soli?", "Forza e coraggio", "Andiamo, non c'è tempo da perdere",
+    "Chi dorme non piglia pesci", "Sveglia sveglia, che siamo a buon punto",
+    "Ma chi ha rubato la voce a tutti quanti?", "E allora, parlate o no?",
+    "Muovetevi, che la tombola non aspetta", "Dai su, ancora pochi numeri",
+  ],
+  en: [
+    "Come on, let's go", "Get a move on", "Come on, everyone", "Try not to fall asleep",
+    "Oh my goodness", "Hey, is everyone asleep in here?", "Wake up, people!", "What are we waiting for, a bus?",
+    "Let's move it, let's move it", "Well? Did we all doze off?", "So quiet in here, come on",
+    "Are these numbers going to call themselves?", "Come on, courage", "Let's go, no time to lose",
+    "The early bird catches the worm", "Wake up, wake up, we're doing great", "Who stole everyone's voice?",
+    "Well? Speak up, will you?", "Get moving, the game won't wait", "Come on, just a few more numbers",
+  ],
+  es: [
+    "Vamos, vamos", "Muévanse un poco", "Vamos, chicos", "Traten de no dormirse", "Madre mía",
+    "Oye, ¿aquí todo el mundo está dormido?", "¡Despierten, gente!", "¿Qué esperamos, el autobús?",
+    "Vamos, vamos, muévanse", "¿Y ahora? ¿Nos quedamos a mitad de camino?", "Qué silencio, por favor",
+    "¿Estos números van a salir solos?", "Ánimo y valor", "Vamos, no hay tiempo que perder",
+    "A quien madruga, Dios lo ayuda", "Despierten, despierten, vamos muy bien", "¿Quién le robó la voz a todos?",
+    "¿Y bien? ¿Van a hablar o no?", "Muévanse, que el juego no espera", "Vamos, ya quedan pocos números",
+  ],
+};
+
+window.pickRandomExclamation = function (lang) {
+  var list = window.EXCLAMATION_PHRASES[lang] || window.EXCLAMATION_PHRASES.nap;
+  return list[Math.floor(Math.random() * list.length)];
+};
+
+// ---------------------------------------------------------------------------
 // TTS reale via Web Speech API del browser (gratuita, nessuna chiamata
 // server) — come da requisiti per l'MVP: napoletano usa la voce italiana più
 // vicina disponibile (nessun browser ha una voce dialettale nativa, quindi
@@ -280,11 +329,15 @@ if (window.speechSynthesis) {
   warmUpVoices(8); // ~6-7s di tentativi in background, appena si apre la pagina
 }
 
-// Qualunque voce "Remote" (online, v.localService === false) per la lingua
-// richiesta va bene — non serve più cercare "Giuseppe" per nome, tutte le
-// voci online sono di qualità simile; quelle "Local"/offline invece no.
+// Preferisce sempre la voce "Diego" (se presente nel browser/sistema),
+// indipendentemente dalla lingua richiesta — per napoletano/italiano è la
+// voce scelta per il progetto. Se non è disponibile, ricade sulla vecchia
+// logica (una voce Remote qualunque per la lingua, poi Local).
 function pickVoice(voices, bcp47) {
   var base = bcp47.split("-")[0].toLowerCase();
+
+  var diego = voices.filter(function (v) { return /diego/i.test(v.name); });
+  if (diego.length) return diego[0];
 
   var remoteExact = voices.filter(function (v) { return !v.localService && v.lang === bcp47; });
   if (remoteExact.length) return remoteExact[0];
@@ -364,12 +417,16 @@ window.buildPrefix = function (num, lang) {
   return num + ", " + meaningFor(num, lang) + ", ";
 };
 
+// Solo il significato, senza il numero — usato per arricchire (solo
+// internamente, mai a schermo) il contesto del turno 1 con la parola vera,
+// vedi playSequence in index.html.
+window.meaningOnly = function (num, lang) {
+  return meaningFor(num, lang);
+};
+
 // ---------------------------------------------------------------------------
 // Backend reale (Python + FastAPI + Gemini): la fase 2 (narrazione) chiama
-// POST /api/narrate invece del motore a template qui sotto. Il motore a
-// template resta nel file (buildNarrationParts/buildNarration) come fallback
-// per sviluppo/offline, ma l'app normalmente non lo usa più — vedi
-// window.fetchNarration, chiamato da index.html.
+// POST /api/narrate — vedi window.fetchNarration, chiamato da index.html.
 // ---------------------------------------------------------------------------
 // In locale (file:// o localhost) punta al backend di sviluppo; altrove
 // (pagina pubblicata) punta al backend pubblico — sostituire il placeholder
@@ -401,11 +458,21 @@ window.LLM_BACKEND_ERROR_PREFIX = {
 };
 
 // Chiama il backend reale per generare il pezzo di racconto del numero
-// appena uscito. Lancia un errore con `.kind` = "unreachable" (nessuna
-// risposta: server spento, rete giù) oppure "backend_error" (risposta HTTP
-// di errore, es. quota Gemini esaurita) — chi chiama sceglie il messaggio
-// giusto in base al kind (vedi playSequence in index.html).
-window.fetchNarration = async function (number, previousNumbers, storySoFar, intensity, language) {
+// appena uscito. Contesto per il MODELLO a costo pressoché costante per
+// tutta la partita (vedi prompt-narrazione_1.md nella root del repo): mai
+// una cronologia che cresce, solo le ULTIME DUE frasi generate + la parola
+// nuova. Il primo numero della partita (previousSentences vuoto) non chiama
+// nemmeno l'LLM: il backend pesca una frase statica da frasi-iniziali.txt.
+// previousNumbers (tutti i numeri usciti finora, non solo gli ultimi due)
+// viene mandato SOLO per il grassetto: il backend lo usa per evidenziare in
+// modo deterministico le parole Smorfia realmente uscite nel testo generato,
+// non viene passato al modello (è economico: solo numeri interi).
+// Ritorna il testo della narrazione (stringa). Lancia un errore con `.kind`
+// = "unreachable" (nessuna risposta: server spento, rete giù) oppure
+// "backend_error" (risposta HTTP di errore, es. quota Gemini esaurita) — chi
+// chiama sceglie il messaggio giusto in base al kind (vedi playSequence in
+// index.html).
+window.fetchNarration = async function (number, previousSentences, previousNumbers, language) {
   let res;
   try {
     res = await fetch(window.BACKEND_URL + "/api/narrate", {
@@ -413,9 +480,8 @@ window.fetchNarration = async function (number, previousNumbers, storySoFar, int
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         number: number,
+        previous_sentences: previousSentences,
         previous_numbers: previousNumbers,
-        story_so_far: storySoFar,
-        intensity: intensity,
         language: language,
       }),
     });
@@ -437,248 +503,15 @@ window.fetchNarration = async function (number, previousNumbers, storySoFar, int
   return data.narration;
 };
 
-// Il testo generato (fase 2) deve SEMPRE avere QUATTRO parti, in quest'ordine:
-//   1. il numero
-//   2. il significato Smorfia
-//   3. una SCENETTA concreta (con un verbo d'azione, non un semplice accostamento
-//      di nomi) che coinvolge sia il significato corrente sia quello precedente,
-//      seguita da un'ipotesi buffa sul perché sia successo
-//   4. una chiusura che guarda avanti, al prossimo numero
-// es. "76, 'a fontana, Pullecenella cade dint' 'a fontana! Forse quaccheduno
-//      l'ha spinto, o forse teneva 'nu poco 'e caldo. Vedimmo mo che succede!"
-
-// Alcuni significati sono nomi propri (persone/feste): non vanno mai scritti
-// con la iniziale minuscola, a differenza dei nomi comuni quando finiscono a
-// metà frase (es. "'a fontana" -> "la fontana" resta minuscolo, "Pullecenella" no).
-var PROPER_NOUN_NUMS = { 1: true, 8: true, 13: true, 19: true, 25: true, 26: true, 52: true, 75: true };
-function midSentence(num, meaning) {
-  if (PROPER_NOUN_NUMS[num]) return meaning;
-  // Il napoletano spesso inizia con un apostrofo ("'A fontana"): la minuscola
-  // va applicata alla prima lettera vera, non all'apostrofo stesso.
-  return meaning.replace(/^('*)([A-Za-zÀ-ÖØ-öø-ÿ])/, function (m, apo, letter) {
-    return apo + letter.toLowerCase();
-  });
-}
-
-// Alcuni significati sono plurali ("'e corne", "'e fasule"...): lo deduciamo
-// dalla forma napoletana canonica e riusiamo lo stesso flag in tutte le lingue,
-// per scegliere la coniugazione giusta del verbo nella scenetta.
-function isPluralNum(num) {
-  var m = (window.SMORFIA_BY_N[num] || {}).meaning || "";
-  return /^'e\s+/i.test(m);
-}
-
-function fill(template, curr, prev) {
-  return template.replace(/\{curr\}/g, curr).replace(/\{prev\}/g, prev);
-}
-
-// Ogni numero è classificato per TIPO, così la scenetta usa un'azione
-// sensata per quel tipo di cosa (non si può "cadere dentro" il Natale, ma
-// ci si può "andare a passare insieme"). Il tipo del numero appena uscito
-// decide quale famiglia di scenette usare.
-//   person   — persone/personaggi/ruoli/gruppi di persone
-//   event    — festività, ricorrenze
-//   place    — luoghi, contenitori
-//   animal   — animali
-//   object   — oggetti fisici, cibo, parti del corpo, vestiti
-//   abstract — sentimenti, stati, concetti non fisici
-var CATEGORY_BY_N = {
-  1: "place", 2: "person", 3: "person", 4: "animal", 5: "object", 6: "person", 7: "abstract", 8: "person", 9: "person", 10: "object",
-  11: "animal", 12: "person", 13: "person", 14: "person", 15: "person", 16: "object", 17: "abstract", 18: "object", 19: "person", 20: "event",
-  21: "person", 22: "person", 23: "person", 24: "person", 25: "event", 26: "person", 27: "abstract", 28: "abstract", 29: "person", 30: "object",
-  31: "person", 32: "animal", 33: "abstract", 34: "object", 35: "animal", 36: "object", 37: "person", 38: "abstract", 39: "object", 40: "object",
-  41: "object", 42: "object", 43: "person", 44: "place", 45: "object", 46: "object", 47: "person", 48: "person", 49: "object", 50: "object",
-  51: "place", 52: "person", 53: "person", 54: "object", 55: "abstract", 56: "abstract", 57: "person", 58: "abstract", 59: "animal", 60: "abstract",
-  61: "person", 62: "person", 63: "person", 64: "object", 65: "abstract", 66: "person", 67: "object", 68: "object", 69: "abstract", 70: "place",
-  71: "person", 72: "abstract", 73: "place", 74: "place", 75: "person", 76: "place", 77: "object", 78: "person", 79: "person", 80: "object",
-  81: "object", 82: "object", 83: "abstract", 84: "place", 85: "person", 86: "place", 87: "animal", 88: "object", 89: "animal", 90: "abstract",
-};
-function categoryOf(num) {
-  return CATEGORY_BY_N[num] || "object";
-}
-
-// Scenetta per il primo numero della partita (nessun precedente da coinvolgere).
-// Per persone/animali si usa la stessa domanda "dove va/vanno" di sempre;
-// per gli altri tipi un'introduzione più generica.
-var OPENER_MOVEMENT = {
-  nap: {
-    soft: { sing: "Vedimmo addó va {curr}!", plur: "Vedimmo addó vanno {curr}!" },
-    spinto: { sing: "Vedimmo addó va {curr}, cu chella furbizia!", plur: "Vedimmo addó vanno {curr}, cu chella furbizia!" },
-  },
-  it: {
-    soft: { sing: "Vediamo dove va {curr}!", plur: "Vediamo dove vanno {curr}!" },
-    spinto: { sing: "Vediamo dove va {curr}, con quell'aria furba!", plur: "Vediamo dove vanno {curr}, con quell'aria furba!" },
-  },
-  en: {
-    soft: { sing: "Let's see where {curr} goes!", plur: "Let's see where {curr} go!" },
-    spinto: { sing: "Let's see where {curr} goes, looking that sly!", plur: "Let's see where {curr} go, looking that sly!" },
-  },
-  es: {
-    soft: { sing: "¡Vamos a ver adónde va {curr}!", plur: "¡Vamos a ver adónde van {curr}!" },
-    spinto: { sing: "¡Vamos a ver adónde va {curr}, con esa cara de pícaro!", plur: "¡Vamos a ver adónde van {curr}, con esa cara de pícaro!" },
-  },
-};
-var OPENER_GENERIC = {
-  nap: { soft: "Eccolo, {curr}! E già se annunzia quacchecosa 'e bello.", spinto: "Eccolo, {curr}! E già se sente ll'aria 'e nu poco 'e sfizio." },
-  it: { soft: "Eccolo, {curr}! E si preannuncia già qualcosa di bello.", spinto: "Eccolo, {curr}! E si sente già un po' di pepe nell'aria." },
-  en: { soft: "There it is, {curr}! Something good is already in the air.", spinto: "There it is, {curr}! You can already feel a little spice in the air." },
-  es: { soft: "¡Ahí está, {curr}! Y ya se anuncia algo bueno.", spinto: "¡Ahí está, {curr}! Y ya se siente un poco de picante en el aire." },
-};
-
-// Scenetta che collega {curr} (numero appena uscito) e {prev} (quello di
-// prima), una famiglia diversa per ogni categoria di {curr} — tranne "place",
-// dove è {prev} a "muoversi" dentro il luogo. Verbi all'indicativo presente:
-// serve solo l'accordo di numero (sing/plur), non quello di genere.
-var CATEGORY_LINK = {
-  person: {
-    nap: {
-      soft: { sing: "Ecco {curr}! Se unisce a {prev} comme si se cunuscessero 'a 'na vita. Chi parla primmo?", plur: "Ecco {curr}! Se uneno a {prev} comme si se cunuscessero 'a 'na vita. Chi parla primmo?" },
-      spinto: { sing: "Ecco {curr}! Se struscia vicino a {prev} cu n'aria furba. Chi ce sta a sentì?", plur: "Ecco {curr}! Se strusciano vicino a {prev} cu n'aria furba. Chi ce sta a sentì?" },
-    },
-    it: {
-      soft: { sing: "Ecco {curr}! Si unisce a {prev} come se si conoscessero da una vita. Chi parla per primo?", plur: "Ecco {curr}! Si uniscono a {prev} come se si conoscessero da una vita. Chi parla per primo?" },
-      spinto: { sing: "Ecco {curr}! Si strofina vicino a {prev} con aria furba. Chi sta ad ascoltare?", plur: "Ecco {curr}! Si strofinano vicino a {prev} con aria furba. Chi sta ad ascoltare?" },
-    },
-    en: {
-      soft: { sing: "Here comes {curr}! It joins {prev} like they've known each other forever. Who speaks first?", plur: "Here come {curr}! They join {prev} like they've known each other forever. Who speaks first?" },
-      spinto: { sing: "Here comes {curr}! It cozies up to {prev} with a sly look. Who's listening in?", plur: "Here come {curr}! They cozy up to {prev} with a sly look. Who's listening in?" },
-    },
-    es: {
-      soft: { sing: "¡Aquí llega {curr}! Se une a {prev} como si se conocieran de toda la vida. ¿Quién habla primero?", plur: "¡Aquí llegan {curr}! Se unen a {prev} como si se conocieran de toda la vida. ¿Quién habla primero?" },
-      spinto: { sing: "¡Aquí llega {curr}! Se acerca a {prev} con cara de pícaro. ¿Quién anda escuchando?", plur: "¡Aquí llegan {curr}! Se acercan a {prev} con cara de pícaro. ¿Quién anda escuchando?" },
-    },
-  },
-  event: {
-    nap: {
-      soft: { sing: "Ah, {prev} vò passà {curr} 'nzieme! Che bella cumpagnia. Chi se ne va aiungenno pure isso?", plur: "Ah, {prev} vonno passà {curr} 'nzieme! Che bella cumpagnia. Chi se ne va aiungenno pure isso?" },
-      spinto: { sing: "Ah, {prev} vò passà {curr} 'nzieme, cu tutte 'e comodità! E chi ce dice ca è tutto innucente?", plur: "Ah, {prev} vonno passà {curr} 'nzieme, cu tutte 'e comodità! E chi ce dice ca è tutto innucente?" },
-    },
-    it: {
-      soft: { sing: "Ah, {prev} decide di passare {curr} insieme! Che bella compagnia. Chi altro si unisce?", plur: "Ah, {prev} decidono di passare {curr} insieme! Che bella compagnia. Chi altro si unisce?" },
-      spinto: { sing: "Ah, {prev} decide di passare {curr} insieme, con tutti i comfort! E chi dice che sia tutto innocente?", plur: "Ah, {prev} decidono di passare {curr} insieme, con tutti i comfort! E chi dice che sia tutto innocente?" },
-    },
-    en: {
-      soft: { sing: "Ah, {prev} decides to spend {curr} together! What lovely company. Who else joins in?", plur: "Ah, {prev} decide to spend {curr} together! What lovely company. Who else joins in?" },
-      spinto: { sing: "Ah, {prev} decides to spend {curr} together, with all the comforts! And who says it's all innocent?", plur: "Ah, {prev} decide to spend {curr} together, with all the comforts! And who says it's all innocent?" },
-    },
-    es: {
-      soft: { sing: "Ah, ¡{prev} decide pasar {curr} juntos! Qué buena compañía. ¿Quién más se une?", plur: "Ah, ¡{prev} deciden pasar {curr} juntos! Qué buena compañía. ¿Quién más se une?" },
-      spinto: { sing: "Ah, ¡{prev} decide pasar {curr} juntos, con todas las comodidades! ¿Y quién dice que es todo inocente?", plur: "Ah, ¡{prev} deciden pasar {curr} juntos, con todas las comodidades! ¿Y quién dice que es todo inocente?" },
-    },
-  },
-  place: {
-    nap: {
-      soft: { sing: "Mammamia! {prev} cade dint' {curr}! Vedimmo comme ne esce!", plur: "Mammamia! {prev} cadeno dint' {curr}! Vedimmo comme ne esceno!" },
-      spinto: { sing: "Uh mamma, {prev} fernesce tutto 'nzuppato dint' {curr}! Vedimmo comme ne esce stavota!", plur: "Uh mamma, {prev} fernesceno tutte 'nzuppate dint' {curr}! Vedimmo comme ne esceno stavota!" },
-    },
-    it: {
-      soft: { sing: "Mammamia! {prev} cade dentro {curr}! Vediamo come ne esce!", plur: "Mammamia! {prev} cadono dentro {curr}! Vediamo come ne escono!" },
-      spinto: { sing: "Uh mamma, {prev} finisce tutto zuppo dentro {curr}! Vediamo come ne esce stavolta!", plur: "Uh mamma, {prev} finiscono tutti zuppi dentro {curr}! Vediamo come ne escono stavolta!" },
-    },
-    en: {
-      soft: { sing: "Oh my! {prev} falls right into {curr}! Let's see how it gets out!", plur: "Oh my! {prev} fall right into {curr}! Let's see how they get out!" },
-      spinto: { sing: "Oh mama, {prev} ends up soaking wet inside {curr}! Let's see how it gets out this time!", plur: "Oh mama, {prev} end up soaking wet inside {curr}! Let's see how they get out this time!" },
-    },
-    es: {
-      soft: { sing: "¡Madre mía! {prev} cae dentro de {curr}! ¡Vamos a ver cómo sale!", plur: "¡Madre mía! {prev} caen dentro de {curr}! ¡Vamos a ver cómo salen!" },
-      spinto: { sing: "Ay mamá, {prev} termina todo mojado dentro de {curr}! ¡Vamos a ver cómo sale esta vez!", plur: "Ay mamá, {prev} terminan todos mojados dentro de {curr}! ¡Vamos a ver cómo salen esta vez!" },
-    },
-  },
-  animal: {
-    nap: {
-      soft: { sing: "Eccolo, {curr}! Se retrova faccia a faccia cu {prev}. Chi scappa primmo?", plur: "Eccole, {curr}! Se retroveno faccia a faccia cu {prev}. Chi scappa primmo?" },
-      spinto: { sing: "Eccolo, {curr}! Se struscia cuntro {prev} cu tanto 'e gusto. Chi scappa primmo?", plur: "Eccole, {curr}! Se strusceno cuntro {prev} cu tanto 'e gusto. Chi scappa primmo?" },
-    },
-    it: {
-      soft: { sing: "Eccolo, {curr}! Si ritrova faccia a faccia con {prev}. Chi scappa per primo?", plur: "Eccoli, {curr}! Si ritrovano faccia a faccia con {prev}. Chi scappa per primo?" },
-      spinto: { sing: "Eccolo, {curr}! Si struscia contro {prev} con gran gusto. Chi scappa per primo?", plur: "Eccoli, {curr}! Si strusciano contro {prev} con gran gusto. Chi scappa per primo?" },
-    },
-    en: {
-      soft: { sing: "There it is, {curr}! It comes face to face with {prev}. Who runs off first?", plur: "There they are, {curr}! They come face to face with {prev}. Who runs off first?" },
-      spinto: { sing: "There it is, {curr}! It rubs right up against {prev} with real enthusiasm. Who runs off first?", plur: "There they are, {curr}! They rub right up against {prev} with real enthusiasm. Who runs off first?" },
-    },
-    es: {
-      soft: { sing: "¡Ahí está, {curr}! Se encuentra cara a cara con {prev}. ¿Quién sale corriendo primero?", plur: "¡Ahí están, {curr}! Se encuentran cara a cara con {prev}. ¿Quién sale corriendo primero?" },
-      spinto: { sing: "¡Ahí está, {curr}! Se restriega contra {prev} con muchas ganas. ¿Quién sale corriendo primero?", plur: "¡Ahí están, {curr}! Se restriegan contra {prev} con muchas ganas. ¿Quién sale corriendo primero?" },
-    },
-  },
-  object: {
-    nap: {
-      soft: { sing: "Uh, {curr} fernesce dritto dritto 'mmano a {prev}! Che ne farrà mo?", plur: "Uh, {curr} fernesceno dritto dritto 'mmano a {prev}! Che ne farranno mo?" },
-      spinto: { sing: "Uh, {curr} fernesce 'mmano a {prev}, e già se sente 'na risatella! Che ne farrà mo?", plur: "Uh, {curr} fernesceno 'mmano a {prev}, e già se sente 'na risatella! Che ne farranno mo?" },
-    },
-    it: {
-      soft: { sing: "Uh, {curr} finisce dritto dritto in mano a {prev}! Cosa ne farà ora?", plur: "Uh, {curr} finiscono dritti dritti in mano a {prev}! Cosa ne faranno ora?" },
-      spinto: { sing: "Uh, {curr} finisce in mano a {prev}, e si sente già una risatina! Cosa ne farà ora?", plur: "Uh, {curr} finiscono in mano a {prev}, e si sente già una risatina! Cosa ne faranno ora?" },
-    },
-    en: {
-      soft: { sing: "Uh, {curr} ends up right in {prev}'s hands! What will it do with it now?", plur: "Uh, {curr} end up right in {prev}'s hands! What will it do with them now?" },
-      spinto: { sing: "Uh, {curr} ends up in {prev}'s hands, and you can already hear a little giggle! What now?", plur: "Uh, {curr} end up in {prev}'s hands, and you can already hear a little giggle! What now?" },
-    },
-    es: {
-      soft: { sing: "Uy, {curr} termina justo en las manos de {prev}! ¿Qué hará con eso ahora?", plur: "Uy, {curr} terminan justo en las manos de {prev}! ¿Qué hará con eso ahora?" },
-      spinto: { sing: "Uy, {curr} termina en las manos de {prev}, ¡y ya se oye una risita! ¿Qué hará ahora?", plur: "Uy, {curr} terminan en las manos de {prev}, ¡y ya se oye una risita! ¿Qué hará ahora?" },
-    },
-  },
-  abstract: {
-    nap: {
-      soft: { sing: "Uh, {curr} piglia {prev} 'e surpresa! Che succerarrà mo?", plur: "Uh, {curr} piglieno {prev} 'e surpresa! Che succerarrà mo?" },
-      spinto: { sing: "Uh, {curr} piglia {prev} 'e surpresa, e nun se sape addó jarrimmo a ffernì! Che succerarrà mo?", plur: "Uh, {curr} piglieno {prev} 'e surpresa, e nun se sape addó jarrimmo a ffernì! Che succerarrà mo?" },
-    },
-    it: {
-      soft: { sing: "Uh, {curr} coglie {prev} di sorpresa! Cosa succederà ora?", plur: "Uh, {curr} colgono {prev} di sorpresa! Cosa succederà ora?" },
-      spinto: { sing: "Uh, {curr} coglie {prev} di sorpresa, e qui non si sa dove si va a finire! Cosa succederà ora?", plur: "Uh, {curr} colgono {prev} di sorpresa, e qui non si sa dove si va a finire! Cosa succederà ora?" },
-    },
-    en: {
-      soft: { sing: "Uh, {curr} catches {prev} by surprise! What'll happen now?", plur: "Uh, {curr} catch {prev} by surprise! What'll happen now?" },
-      spinto: { sing: "Uh, {curr} catches {prev} by surprise, and who knows where this is headed! What'll happen now?", plur: "Uh, {curr} catch {prev} by surprise, and who knows where this is headed! What'll happen now?" },
-    },
-    es: {
-      soft: { sing: "Uy, {curr} agarra a {prev} por sorpresa! ¿Qué pasará ahora?", plur: "Uy, {curr} agarran a {prev} por sorpresa! ¿Qué pasará ahora?" },
-      spinto: { sing: "Uy, {curr} agarra a {prev} por sorpresa, ¡y aquí no se sabe dónde vamos a parar! ¿Qué pasará ahora?", plur: "Uy, {curr} agarran a {prev} por sorpresa, ¡y aquí no se sabe dónde vamos a parar! ¿Qué pasará ahora?" },
-    },
-  },
-};
-
-// Fase 2: SEMPRE "numero, significato, scenetta" nel testo SCRITTO — la
-// scenetta usa la famiglia di template giusta per il TIPO del numero appena
-// uscito, quindi resta sensata anche per coppie non fisiche (es. "guardie" +
-// "Natale"). Restituisce { prefix, body }: il "numero, significato" va
-// scritto nel racconto ma NON va riletto ad alta voce, perché la fase 1
-// (chiamata) l'ha già detto — altrimenti il TTS ripete il numero due volte
-// di fila. window.buildNarration(...) resta come comodo alias per il solo
-// testo scritto (prefix + body).
-window.buildNarrationParts = function (clickIndex, num, prevNum, lang, intensity) {
-  var level = intensity === "spinto" ? "spinto" : "soft";
-  var langKey = window.MEANING_BY_LANG[lang] ? lang : "nap";
-  var meaning = meaningFor(num, langKey);
-  var prefix = num + ", " + meaning + ", ";
-  var currMid = midSentence(num, meaning);
-  var cat = categoryOf(num);
-
-  if (clickIndex === 0 || !prevNum) {
-    var currForm = isPluralNum(num) ? "plur" : "sing";
-    if (cat === "person" || cat === "animal") {
-      var moveTpl = OPENER_MOVEMENT[langKey][level][currForm];
-      return { prefix: prefix, body: fill(moveTpl, currMid, "") };
-    }
-    var genericTpl = OPENER_GENERIC[langKey][level];
-    return { prefix: prefix, body: fill(genericTpl, currMid, "") };
-  }
-
-  var prevMid = midSentence(prevNum, meaningFor(prevNum, langKey));
-  // Per "place" ed "event" è {prev} il soggetto grammaticale (chi cade nel
-  // luogo, chi festeggia); per tutte le altre categorie è {curr}.
-  var subjectNum = (cat === "place" || cat === "event") ? prevNum : num;
-  var form = isPluralNum(subjectNum) ? "plur" : "sing";
-  var bank = CATEGORY_LINK[cat][langKey][level];
-  var template = bank[form] || bank.sing;
-  return { prefix: prefix, body: fill(template, currMid, prevMid) };
-};
-
-window.buildNarration = function (clickIndex, num, prevNum, lang, intensity) {
-  var parts = window.buildNarrationParts(clickIndex, num, prevNum, lang, intensity);
-  return parts.prefix + parts.body;
+// Spezza un testo con marcatori **grassetto** (i soli usati dal backend, per
+// evidenziare le parole Smorfia nella frase) in segmenti { text, bold }, per
+// renderizzarli come <strong> in StoryPanel senza dover interpretare markdown
+// generico. Esempio: "Ecco **'a fontana**!" -> [{text:"Ecco ",bold:false}, {text:"'a fontana",bold:true}, {text:"!",bold:false}]
+window.splitBoldSegments = function (text) {
+  var parts = String(text || "").split(/\*\*(.+?)\*\*/g);
+  return parts.map(function (part, i) {
+    return { text: part, bold: i % 2 === 1 };
+  }).filter(function (seg) { return seg.text.length > 0; });
 };
 
 // ---------------------------------------------------------------------------
