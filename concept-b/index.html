@@ -7,8 +7,23 @@
 <!-- Google AdSense: script di verifica/auto-ads. L'ID cliente è pubblico
      per design (compare nell'HTML di ogni sito con AdSense), non è un
      segreto. L'AdBanner placeholder più sotto va sostituito con un vero
-     <ins class="adsbygoogle"> quando avremo lo slot dell'unità pubblicitaria. -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4408823948381158" crossorigin="anonymous"></script>
+     <ins class="adsbygoogle"> quando avremo lo slot dell'unità pubblicitaria.
+     Caricato solo su http/https, MAI su file:// — aperto in locale
+     (doppio click sul file) il tag <script> statico verso un dominio
+     pubblicitario reale blocca il caricamento dell'intera pagina (pagina
+     bianca): probabilmente Chrome resta in attesa indefinita della risposta
+     di rete per una risorsa cross-origin caricata da un'origine file://
+     opaca. Su Netlify (https://) funziona regolarmente, verificato da
+     Google in fase di revisione AdSense. -->
+<script>
+  if (location.protocol !== "file:") {
+    var adsenseScript = document.createElement("script");
+    adsenseScript.async = true;
+    adsenseScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4408823948381158";
+    adsenseScript.crossOrigin = "anonymous";
+    document.head.appendChild(adsenseScript);
+  }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -97,13 +112,14 @@
     0%, 100% { opacity: 0.35; }
     50% { opacity: 1; }
   }
-  .lang-select {
+  /* Select circolare (pulsante lingua): niente freccia nativa, testo
+     centrato — uniforme in forma agli altri pulsanti rotondi dell'header. */
+  .lang-select-round {
     -webkit-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%230c5c94'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.7rem center;
-    background-size: 1.1em;
+    text-align: center;
+    text-align-last: center;
+    padding: 0;
   }
 </style>
 </head>
@@ -114,68 +130,27 @@
 const { useState, useRef, useEffect, useCallback } = React;
 
 // ---------- Icone ----------
-// Vesuvio "logo", stessa illustrazione folk usata in Concept A (colori invariati
-// per coerenza tra i due concept, anche se la palette qui è diversa).
+// Icone in file JPG (concept-b/img/) invece che SVG inline nel codice, così
+// si possono sostituire semplicemente cambiando il file, senza toccare il
+// codice. Generate una tantum da backend/generate_icons.py a partire dal
+// design originale; ridisegnabili a mano in qualunque editor di immagini.
 function VesuvioIcon({ className }) {
-  return (
-    <svg viewBox="0 0 100 60" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 54 L34 12 L42 24 L50 8 L96 54 Z" fill="#c1553b" stroke="#2b2622" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M42 24 L50 8 L58 22" stroke="#2b2622" strokeWidth="2.5" strokeLinejoin="round" fill="#e0a93e" />
-      <path d="M46 16 q4 -8 10 -4" stroke="#2b2622" strokeWidth="2" fill="none" strokeLinecap="round" />
-    </svg>
-  );
+  return <img src="img/vesuvio.jpg" alt="Vesuvio" className={className} />;
 }
 // ---------- Sticker decorativi flat/playful (finestra racconto vuota) ----------
-// Cornetto portafortuna: corno sottile e allungato (non un blob tondo/pomodoro).
 function CornettoSticker({ className }) {
   return (
-    <svg viewBox="0 0 70 90" className={className} xmlns="http://www.w3.org/2000/svg">
-      <circle cx="35" cy="45" r="34" fill="#eaf7ff" />
-      <path
-        d="M34 16c5 1 9 6 8 12-1 5-4 8-4 13 0 4 2 7 1 12-1 6-4 11-4 17-1 6-3 11-3 15-2-5-4-10-4-16 0-5 2-9 2-14 0-4-2-7-1-11 1-6 4-9 4-14 0-5-1-10 1-14Z"
-        fill="#ff6b52"
-        stroke="#0c5c94"
-        strokeWidth="2.2"
-        strokeLinejoin="round"
-      />
-      <circle cx="33" cy="17" r="3" fill="none" stroke="#0c5c94" strokeWidth="2.2" />
-      <path d="M31 30q-3 14 0 26" stroke="#ffffff" strokeWidth="1.6" fill="none" strokeLinecap="round" opacity="0.65" />
-    </svg>
+    <img src="img/cornetto.jpg" alt="Cornetto portafortuna" className={(className || "") + " aspect-square object-cover rounded-full"} />
   );
 }
-// Pulcinella: cappello a punta bianco + mascherina nera "a fascia" con naso a becco.
-// Forme semplici apposta, per restare leggibili anche piccole.
 function PulcinellaSticker({ className }) {
   return (
-    <svg viewBox="0 0 70 90" className={className} xmlns="http://www.w3.org/2000/svg">
-      <circle cx="35" cy="45" r="34" fill="#ffe27a" />
-      <path d="M35 11 L49 40 L21 40 Z" fill="#ffffff" stroke="#0c5c94" strokeWidth="2.3" strokeLinejoin="round" />
-      <circle cx="35" cy="11" r="2.6" fill="#ffffff" stroke="#0c5c94" strokeWidth="2" />
-      <circle cx="35" cy="55" r="18" fill="#ffffff" stroke="#0c5c94" strokeWidth="2.3" />
-      <rect x="21" y="47" width="28" height="9" rx="4.5" fill="#0c5c94" />
-      <path d="M40 49 L52 55 L40 59 Z" fill="#0c5c94" />
-      <circle cx="28" cy="51.5" r="1.6" fill="#ffe27a" />
-      <circle cx="42" cy="51.5" r="1.6" fill="#ffe27a" />
-      <path d="M29 68q6 4 12 0" stroke="#0c5c94" strokeWidth="2" fill="none" strokeLinecap="round" />
-    </svg>
+    <img src="img/pulcinella.jpg" alt="Pulcinella" className={(className || "") + " aspect-square object-cover rounded-full"} />
   );
 }
-// 'O ciucciariello: musetto frontale con le tipiche orecchie a penzoloni ai
-// lati (grigie, per non confondersi con un coniglio) e musetto chiaro con narici.
 function CiuccioSticker({ className }) {
   return (
-    <svg viewBox="0 0 90 70" className={className} xmlns="http://www.w3.org/2000/svg">
-      <circle cx="45" cy="35" r="34" fill="#8ff0d4" />
-      <ellipse cx="18" cy="31" rx="8" ry="16" fill="#d7dee3" stroke="#0c5c94" strokeWidth="2.3" transform="rotate(-25 18 31)" />
-      <ellipse cx="72" cy="31" rx="8" ry="16" fill="#d7dee3" stroke="#0c5c94" strokeWidth="2.3" transform="rotate(25 72 31)" />
-      <ellipse cx="45" cy="40" rx="20" ry="18" fill="#ffffff" stroke="#0c5c94" strokeWidth="2.3" />
-      <path d="M40 19q5-6 10 0" stroke="#0c5c94" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <ellipse cx="45" cy="53" rx="12" ry="8.5" fill="#f0f3f5" stroke="#0c5c94" strokeWidth="2" />
-      <circle cx="40" cy="54" r="1.6" fill="#0c5c94" />
-      <circle cx="50" cy="54" r="1.6" fill="#0c5c94" />
-      <circle cx="36" cy="35" r="2.2" fill="#0c5c94" />
-      <circle cx="54" cy="35" r="2.2" fill="#0c5c94" />
-    </svg>
+    <img src="img/asinello.jpg" alt="'O ciucciariello" className={(className || "") + " aspect-square object-cover rounded-full"} />
   );
 }
 
@@ -186,12 +161,12 @@ function LanguageSelector({ language, setLanguage, disabled }) {
       value={language}
       onChange={(e) => setLanguage(e.target.value)}
       disabled={disabled}
-      title={disabled ? "Bloccato per tutta la partita — premi \"Nuova storia\" per cambiarlo" : undefined}
-      className={"lang-select bg-napoli-50 border border-napoli-100 rounded-full pl-4 pr-8 py-2 text-sm font-bold text-napoli-800 shrink-0 " + (disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}
+      title={disabled ? "Bloccato per tutta la partita — premi \"Nuova storia\" per cambiarlo" : "Lingua del racconto"}
+      className={"lang-select-round w-11 h-11 rounded-full bg-white shadow-md text-xs font-bold text-napoli-700 shrink-0 text-center " + (disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105 active:scale-95 transition-transform")}
       aria-label="Lingua del racconto"
     >
       {window.LANGUAGES.map((l) => (
-        <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+        <option key={l.code} value={l.code}>{l.short}</option>
       ))}
     </select>
   );
@@ -221,7 +196,19 @@ function AboutModal({ onClose, language }) {
             ✕
           </button>
         </div>
-        <p className="text-sm text-napoli-700/70 italic mb-4">{c.tagline}</p>
+        <p className="text-sm text-napoli-700/70 italic mb-1">{c.tagline}</p>
+        {c.downloadLink && (
+          <p className="text-sm mb-4">
+            <a
+              href={c.downloadLink.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-napoli-600 underline hover:text-napoli-800 transition-colors"
+            >
+              {c.downloadLink.text}
+            </a>
+          </p>
+        )}
         {c.sections.map((s, i) => (
           <div key={i} className="mb-4 last:mb-0">
             <h3 className="font-display font-bold text-base text-napoli-800 mb-1.5">{s.heading}</h3>
@@ -531,6 +518,18 @@ function App() {
     window.speak(window.pickRandomExclamation(language), language, false);
   };
 
+  // Pulsante "dado" — estrae un numero a caso tra quelli non ancora usciti
+  // e lo gioca esattamente come un click manuale sul tabellone.
+  const handleRandomNumber = () => {
+    const available = [];
+    for (let n = 1; n <= 90; n++) {
+      if (!orderRef.current.includes(n)) available.push(n);
+    }
+    if (available.length === 0) return;
+    const n = available[Math.floor(Math.random() * available.length)];
+    handleCellClick(n);
+  };
+
   return (
     <div className="min-h-screen pb-8">
       <header className="sticky top-0 z-10 backdrop-blur bg-white/10 border-b border-white/20">
@@ -548,9 +547,9 @@ function App() {
             <button
               onClick={() => setShowAbout(true)}
               title="Cosa è Tumbulella"
-              className="px-3.5 h-11 rounded-full bg-white shadow-md flex items-center gap-1.5 text-sm font-bold text-napoli-700 hover:scale-105 active:scale-95 transition-transform shrink-0"
+              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
             >
-              ❓ Cosa è
+              ❓
             </button>
             <LanguageSelector language={language} setLanguage={setLanguage} disabled={extractedOrder.length > 0} />
             <button
@@ -568,18 +567,23 @@ function App() {
               onClick={handleExclamation}
               disabled={muted}
               title={muted ? "Riattiva la voce per usare l'esortazione" : "Un po' di sveglia per tutti!"}
-              className={
-                "w-11 h-11 rounded-full shadow-md flex items-center justify-center text-lg font-display font-extrabold transition-transform shrink-0 " +
-                (muted ? "bg-white/50 text-napoli-700/40 cursor-not-allowed" : "bg-lemon-400 text-napoli-900 hover:scale-105 active:scale-95")
-              }
+              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
             >
               !
             </button>
             <button
-              onClick={handleNewStory}
-              className="px-4 py-2.5 rounded-full bg-white text-napoli-700 text-sm font-bold shadow-md hover:scale-105 active:scale-95 transition-transform"
+              onClick={handleRandomNumber}
+              title="Numero a caso"
+              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
             >
-              🔄 Nuova storia
+              🎲
+            </button>
+            <button
+              onClick={handleNewStory}
+              title="Nuova storia"
+              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
+            >
+              🔄
             </button>
           </div>
         </div>

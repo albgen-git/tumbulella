@@ -109,10 +109,10 @@ window.SMORFIA_BY_N = window.SMORFIA.reduce(function (acc, item) {
 // insieme al testo narrativo dall'LLM.
 // ---------------------------------------------------------------------------
 window.LANGUAGES = [
-  { code: "nap", label: "Napoletano", flag: "🎭" },
-  { code: "it", label: "Italiano", flag: "🇮🇹" },
-  { code: "en", label: "English", flag: "🇬🇧" },
-  { code: "es", label: "Español", flag: "🇪🇸" },
+  { code: "nap", label: "Napoletano", flag: "🎭", short: "NAP" },
+  { code: "it", label: "Italiano", flag: "🇮🇹", short: "IT" },
+  { code: "en", label: "English", flag: "🇬🇧", short: "EN" },
+  { code: "es", label: "Español", flag: "🇪🇸", short: "ES" },
 ];
 
 // Italiano preso direttamente dal campo "italiano" di smorfia.json (fonte
@@ -526,6 +526,7 @@ window.ABOUT_CONTENT = {
   it: {
     title: "Cosa è Tumbulella",
     tagline: "La tombola napoletana raccontata da un'antica tradizione, in chiave moderna.",
+    downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Scarica le cartelle da stampare (PDF)" },
     sections: [
       {
         heading: "Cos'è Tumbulella",
@@ -566,6 +567,7 @@ window.ABOUT_CONTENT = {
   nap: {
     title: "Ch'è Tumbulella",
     tagline: "'A tombola napulitana cuntata da 'n'antica tradizione, a modo moderno.",
+    downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Scarica 'e cartelle da stampá (PDF)" },
     sections: [
       {
         heading: "Ch'è Tumbulella",
@@ -606,6 +608,7 @@ window.ABOUT_CONTENT = {
   en: {
     title: "What is Tumbulella",
     tagline: "The Neapolitan tombola, told through an ancient tradition, in a modern key.",
+    downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Download printable cards (PDF)" },
     sections: [
       {
         heading: "What is Tumbulella",
@@ -646,6 +649,7 @@ window.ABOUT_CONTENT = {
   es: {
     title: "Qué es Tumbulella",
     tagline: "El bingo napolitano contado por una antigua tradición, en clave moderna.",
+    downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Descargar los cartones para imprimir (PDF)" },
     sections: [
       {
         heading: "Qué es Tumbulella",
