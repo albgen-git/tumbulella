@@ -355,11 +355,63 @@ function pickVoice(voices, bcp47) {
   return sameLang.length ? sameLang[0] : null;
 }
 
+// TTS reale in napoletano via Gemini (voce "Puck", backend /api/tts) — vedi
+// requirements.md. Ritorna true se riprodotto con successo; false se il
+// backend non risponde/da errore, così window.speak ricade su Web Speech
+// (mai un turno silenzioso solo perché il servizio a pagamento è giù).
+function speakNapoletanoTTS(text) {
+  return fetch(window.BACKEND_URL + "/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: text }),
+  })
+    .then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.blob();
+    })
+    .then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      return new Promise(function (resolve) {
+        var audio = new Audio(url);
+        audio.onended = function () {
+          URL.revokeObjectURL(url);
+          resolve(true);
+        };
+        audio.onerror = function () {
+          URL.revokeObjectURL(url);
+          resolve(false);
+        };
+        audio.play().catch(function () {
+          URL.revokeObjectURL(url);
+          resolve(false);
+        });
+      });
+    })
+    .catch(function () {
+      return false;
+    });
+}
+
 // Legge `text` ad alta voce nella lingua `lang`. Risolve la Promise (con
 // `true`) quando la lettura finisce; risolve subito con `false` se la TTS
 // non è disponibile o è mutata, così il chiamante sa se deve ricadere sulla
-// pausa fissa in window.TIMING.
+// pausa fissa in window.TIMING. Per il napoletano prova prima il TTS reale
+// (Gemini, voce "Puck"); se fallisce, ricade su Web Speech come le altre lingue.
 window.speak = function (text, lang, muted) {
+  if (muted) return Promise.resolve(false);
+  if (lang === "nap") {
+    return speakNapoletanoTTS(text).then(function (ok) {
+      if (ok) {
+        window.__lastVoiceUsed = "Gemini TTS (Puck)";
+        return true;
+      }
+      return speakWebSpeech(text, lang, muted);
+    });
+  }
+  return speakWebSpeech(text, lang, muted);
+};
+
+function speakWebSpeech(text, lang, muted) {
   var synth = window.speechSynthesis;
   if (muted || !synth || typeof SpeechSynthesisUtterance === "undefined") {
     return Promise.resolve(false);

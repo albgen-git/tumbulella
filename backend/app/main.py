@@ -6,14 +6,14 @@ requirements.md per non introdurre persistenza nell'MVP.
 """
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()  # legge backend/.env se presente, prima di leggere GEMINI_API_KEY
 
-from app import frasi_iniziali, prompts, smorfia
+from app import frasi_iniziali, prompts, smorfia, tts
 from app.llm_client import LLMNotConfiguredError, generate_narration, is_configured
-from app.models import HealthResponse, NarrateRequest, NarrateResponse, SmorfiaEntry
+from app.models import HealthResponse, NarrateRequest, NarrateResponse, SmorfiaEntry, TTSRequest
 
 app = FastAPI(
     title="Tumbulella API",
@@ -97,3 +97,17 @@ def narrate(req: NarrateRequest) -> NarrateResponse:
     narration = prompts.bold_smorfia_words(narration, req.previous_numbers + [req.number], req.language)
 
     return NarrateResponse(number=req.number, call=call, narration=narration)
+
+
+@app.post("/api/tts")
+def text_to_speech(req: TTSRequest) -> Response:
+    """TTS reale in napoletano (voce "Puck") — le altre 3 lingue restano su
+    Web Speech lato client, non passano da qui. Vedi app/tts.py."""
+    try:
+        audio_wav = tts.generate_speech(req.text)
+    except tts.TTSNotConfiguredError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    except Exception as e:  # errori di rete/API Gemini
+        raise HTTPException(status_code=502, detail=f"Errore nella generazione audio: {e}") from e
+
+    return Response(content=audio_wav, media_type="audio/wav")

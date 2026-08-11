@@ -26,6 +26,10 @@ class NarrateResponse(BaseModel):
     narration: str  # Fase 2: al primo numero è una frase statica (frasi-iniziali-{lingua}.txt), poi generata dal modello
 
 
+class TTSRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=500, description="Testo da leggere in napoletano (fase 1 o fase 2)")
+
+
 class SmorfiaEntry(BaseModel):
     number: int
     napoletano: str
