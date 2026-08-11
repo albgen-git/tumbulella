@@ -1,9 +1,3 @@
-// NOTA: questo file NON viene caricato direttamente da index.html.
-// Babel standalone carica gli script esterni via XHR, che i browser bloccano
-// per CORS quando la pagina è aperta con file:// — per questo il codice qui
-// sotto è duplicato inline dentro <script type="text/babel"> in index.html.
-// Tenuto qui solo come sorgente leggibile: se lo modifichi, aggiorna anche
-// il blocco corrispondente in index.html (o chiedi a Claude di farlo).
 const { useState, useRef, useEffect, useCallback } = React;
 
 // ---------- Icone ----------
@@ -86,6 +80,19 @@ function AboutModal({ onClose, language }) {
             </a>
           </p>
         )}
+        {c.donation && (
+          <div className="rounded-lg bg-napoli-50 border border-napoli-900/10 p-3 mb-4 text-sm text-napoli-900/80 leading-relaxed">
+            <p className="mb-1.5">{c.donation.text}</p>
+            <a
+              href={c.donation.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-napoli-600 underline hover:text-napoli-800 transition-colors"
+            >
+              {c.donation.linkText}
+            </a>
+          </div>
+        )}
         {c.sections.map((s, i) => (
           <div key={i} className="mb-4 last:mb-0">
             <h3 className="font-display font-bold text-base text-napoli-800 mb-1.5">{s.heading}</h3>
@@ -114,6 +121,17 @@ function AboutModal({ onClose, language }) {
             })}
           </div>
         ))}
+        {c.credit && (
+          <p className="text-xs text-napoli-700/60 italic pt-3 mt-1 border-t border-napoli-900/10">
+            {c.credit.text}{" "}
+            <a
+              href={`mailto:${c.credit.email}`}
+              className="font-bold text-napoli-600 underline hover:text-napoli-800 transition-colors not-italic"
+            >
+              {c.credit.email}
+            </a>
+          </p>
+        )}
       </div>
     </div>
   );

@@ -4,363 +4,543 @@
   "numeri": {
     "1": {
       "napoletano": "L'Italia",
-      "italiano": "L'Italia"
+      "italiano": "L'Italia",
+      "inglese": "Italy",
+      "spagnolo": "Italia"
     },
     "2": {
       "napoletano": "'a peccerella",
-      "italiano": "la piccolina"
+      "italiano": "la piccolina",
+      "inglese": "the little girl",
+      "spagnolo": "la pequeña"
     },
     "3": {
       "napoletano": "'o stuorto dint' 'a villa",
-      "italiano": "lo storto nella villa"
+      "italiano": "lo storto nella villa",
+      "inglese": "the crooked man in the park",
+      "spagnolo": "el torcido en el parque"
     },
     "4": {
       "napoletano": "'o puorco",
-      "italiano": "il porco"
+      "italiano": "il porco",
+      "inglese": "the pig",
+      "spagnolo": "el cerdo"
     },
     "5": {
       "napoletano": "'a mana",
-      "italiano": "la mano"
+      "italiano": "la mano",
+      "inglese": "the hand",
+      "spagnolo": "la mano"
     },
     "6": {
       "napoletano": "chella ca guarda sempe 'nterra",
-      "italiano": "la patata"
+      "italiano": "la patata",
+      "inglese": "pussycat",
+      "spagnolo": "papaya"
     },
     "7": {
       "napoletano": "'e sette peccate murtale",
-      "italiano": "i sette peccati mortali"
+      "italiano": "i sette peccati mortali",
+      "inglese": "the seven deadly sins",
+      "spagnolo": "los siete pecados capitales"
     },
     "8": {
       "napoletano": "Maria, 'a Madonna",
-      "italiano": "Maria, la Madonna"
+      "italiano": "Maria, la Madonna",
+      "inglese": "Mary, the Madonna",
+      "spagnolo": "María, la Virgen"
     },
     "9": {
       "napoletano": "'a figliata",
-      "italiano": "la figliata"
+      "italiano": "la figliata",
+      "inglese": "a big brood of children",
+      "spagnolo": "la camada de hijos"
     },
     "10": {
       "napoletano": "'e fasule",
-      "italiano": "i fagioli"
+      "italiano": "i fagioli",
+      "inglese": "the beans",
+      "spagnolo": "las judías"
     },
     "11": {
       "napoletano": "'e surece",
-      "italiano": "i topi"
+      "italiano": "i topi",
+      "inglese": "the mice",
+      "spagnolo": "los ratones"
     },
     "12": {
       "napoletano": "'o surdate",
-      "italiano": "il soldato"
+      "italiano": "il soldato",
+      "inglese": "the soldier",
+      "spagnolo": "el soldado"
     },
     "13": {
       "napoletano": "Sant'Antonio",
-      "italiano": "Sant'Antonio"
+      "italiano": "Sant'Antonio",
+      "inglese": "Saint Anthony",
+      "spagnolo": "San Antonio"
     },
     "14": {
       "napoletano": "'o 'mbriaco",
-      "italiano": "l'ubriaco"
+      "italiano": "l'ubriaco",
+      "inglese": "the drunk",
+      "spagnolo": "el borracho"
     },
     "15": {
       "napoletano": "'o Rre",
-      "italiano": "il Re"
+      "italiano": "il Re",
+      "inglese": "the King",
+      "spagnolo": "el Rey"
     },
     "16": {
       "napoletano": "'o culo",
-      "italiano": "il culo"
+      "italiano": "il culo",
+      "inglese": "the backside",
+      "spagnolo": "el culo"
     },
     "17": {
       "napoletano": "'a disgrazzia",
-      "italiano": "la disgrazia"
+      "italiano": "la disgrazia",
+      "inglese": "misfortune",
+      "spagnolo": "la desgracia"
     },
     "18": {
       "napoletano": "'o sanghe",
-      "italiano": "il sangue"
+      "italiano": "il sangue",
+      "inglese": "blood",
+      "spagnolo": "la sangre"
     },
     "19": {
       "napoletano": "San Giuseppe",
-      "italiano": "San Giuseppe"
+      "italiano": "San Giuseppe",
+      "inglese": "Saint Joseph",
+      "spagnolo": "San José"
     },
     "20": {
       "napoletano": "'a festa",
-      "italiano": "la festa"
+      "italiano": "la festa",
+      "inglese": "the party",
+      "spagnolo": "la fiesta"
     },
     "21": {
       "napoletano": "'a femmena annura",
-      "italiano": "la donna nuda"
+      "italiano": "la donna nuda",
+      "inglese": "the naked woman",
+      "spagnolo": "la mujer desnuda"
     },
     "22": {
       "napoletano": "'o pazzo",
-      "italiano": "il pazzo"
+      "italiano": "il pazzo",
+      "inglese": "the madman",
+      "spagnolo": "el loco"
     },
     "23": {
       "napoletano": "'o scemo",
-      "italiano": "lo scemo"
+      "italiano": "lo scemo",
+      "inglese": "the fool",
+      "spagnolo": "el tonto"
     },
     "24": {
       "napoletano": "'e guardie",
-      "italiano": "le guardie"
+      "italiano": "le guardie",
+      "inglese": "the guards",
+      "spagnolo": "los guardias"
     },
     "25": {
       "napoletano": "Natale",
-      "italiano": "Natale"
+      "italiano": "Natale",
+      "inglese": "Christmas",
+      "spagnolo": "Navidad"
     },
     "26": {
       "napoletano": "Nannenella",
-      "italiano": "la figlia"
+      "italiano": "la figlia",
+      "inglese": "the daughter",
+      "spagnolo": "la hija"
     },
     "27": {
       "napoletano": "è muscio",
-      "italiano": "è moscio"
+      "italiano": "è moscio",
+      "inglese": "it's gone soft",
+      "spagnolo": "está flojo"
     },
     "28": {
       "napoletano": "'e zizze, zuche e dduorme",
-      "italiano": "i seni, succhia e dormi"
+      "italiano": "i seni, succhia e dormi",
+      "inglese": "the breasts, suck and sleep",
+      "spagnolo": "los pechos, chupa y duerme"
     },
     "29": {
       "napoletano": "'o pesce, 'o pate d' 'e criature, chille ca cumbine tutte 'e guaie",
-      "italiano": "il pesce, il padre dei bambini, quello che combina tutti i guai"
+      "italiano": "il pesce, il padre dei bambini, quello che combina tutti i guai",
+      "inglese": "the fish, the father of the children, the one who causes all the trouble",
+      "spagnolo": "la banana, el padre de los niños, el que arma todos los líos"
     },
     "30": {
       "napoletano": "'e palle d' 'o tenente",
-      "italiano": "le palle del tenente"
+      "italiano": "le palle del tenente",
+      "inglese": "the lieutenant's balls",
+      "spagnolo": "los cojones del teniente"
     },
     "31": {
       "napoletano": "'o padrone 'e casa",
-      "italiano": "il padrone di casa"
+      "italiano": "il padrone di casa",
+      "inglese": "the landlord",
+      "spagnolo": "el dueño de la casa"
     },
     "32": {
       "napoletano": "'o capitone",
-      "italiano": "il capitone"
+      "italiano": "il capitone",
+      "inglese": "the Christmas eel",
+      "spagnolo": "la anguila"
     },
     "33": {
       "napoletano": "l'anne 'e Cristo",
-      "italiano": "gli anni di Cristo"
+      "italiano": "gli anni di Cristo",
+      "inglese": "the years of Christ",
+      "spagnolo": "los años de Cristo"
     },
     "34": {
       "napoletano": "'a capocchia",
-      "italiano": "la testa"
+      "italiano": "la testa",
+      "inglese": "the head",
+      "spagnolo": "la cabeza"
     },
     "35": {
       "napoletano": "l'auciello, zui zui",
-      "italiano": "l' uccello"
+      "italiano": "l' uccello",
+      "inglese": "the bird",
+      "spagnolo": "el pájaro"
     },
     "36": {
       "napoletano": "'e caramelle",
-      "italiano": "le caramelle"
+      "italiano": "le caramelle",
+      "inglese": "the candies",
+      "spagnolo": "los caramelos"
     },
     "37": {
       "napoletano": "'o moneco",
-      "italiano": "il monaco"
+      "italiano": "il monaco",
+      "inglese": "the monk",
+      "spagnolo": "el monje"
     },
     "38": {
       "napoletano": "'e mazzate",
-      "italiano": "le botte"
+      "italiano": "le botte",
+      "inglese": "the beating",
+      "spagnolo": "los golpes"
     },
     "39": {
       "napoletano": "l'acqua, 'nganne",
-      "italiano": "l'acqua alla gola"
+      "italiano": "l'acqua alla gola",
+      "inglese": "water up to the throat",
+      "spagnolo": "el agua al cuello"
     },
     "40": {
       "napoletano": "'a neva",
-      "italiano": "la neve"
+      "italiano": "la neve",
+      "inglese": "the snow",
+      "spagnolo": "la nieve"
     },
     "41": {
       "napoletano": "'o curtiello",
-      "italiano": "il coltello"
+      "italiano": "il coltello",
+      "inglese": "the knife",
+      "spagnolo": "el cuchillo"
     },
     "42": {
       "napoletano": "'o cafè",
-      "italiano": "il caffè"
+      "italiano": "il caffè",
+      "inglese": "the coffee",
+      "spagnolo": "el café"
     },
     "43": {
       "napoletano": "'onna Pereta fore 'o barcone",
-      "italiano": "donna Pereta fuori al balcone"
+      "italiano": "donna Pereta fuori al balcone",
+      "inglese": "Miss Pereta on the balcony",
+      "spagnolo": "doña Pereta en el balcón"
     },
     "44": {
       "napoletano": "'e carcere",
-      "italiano": "il carcere"
+      "italiano": "il carcere",
+      "inglese": "prison",
+      "spagnolo": "la cárcel"
     },
     "45": {
       "napoletano": "'o vino",
-      "italiano": "il vino"
+      "italiano": "il vino",
+      "inglese": "the wine",
+      "spagnolo": "el vino"
     },
     "46": {
       "napoletano": "'a pummarola",
-      "italiano": "il pomodoro"
+      "italiano": "il pomodoro",
+      "inglese": "the tomato",
+      "spagnolo": "el tomate"
     },
     "47": {
       "napoletano": "'o muorto",
-      "italiano": "il morto"
+      "italiano": "il morto",
+      "inglese": "the dead man",
+      "spagnolo": "el muerto"
     },
     "48": {
       "napoletano": "'o muorto ca parla",
-      "italiano": "il morto che parla"
+      "italiano": "il morto che parla",
+      "inglese": "the dead man who talks",
+      "spagnolo": "el muerto que habla"
     },
     "49": {
       "napoletano": "'o piezzo 'e carne",
-      "italiano": "il pezzo di carne"
+      "italiano": "il pezzo di carne",
+      "inglese": "the piece of meat",
+      "spagnolo": "el trozo de carne"
     },
     "50": {
       "napoletano": "'o ppane",
-      "italiano": "il pane"
+      "italiano": "il pane",
+      "inglese": "the bread",
+      "spagnolo": "el pan"
     },
     "51": {
       "napoletano": "'o ciardino",
-      "italiano": "il giardino"
+      "italiano": "il giardino",
+      "inglese": "the garden",
+      "spagnolo": "el jardín"
     },
     "52": {
       "napoletano": "Mammà",
-      "italiano": "Mamma"
+      "italiano": "Mamma",
+      "inglese": "Mom",
+      "spagnolo": "Mamá"
     },
     "53": {
       "napoletano": "'o vecchio",
-      "italiano": "il vecchio"
+      "italiano": "il vecchio",
+      "inglese": "the old man",
+      "spagnolo": "el viejo"
     },
     "54": {
       "napoletano": "'o cappiello",
-      "italiano": "il cappello"
+      "italiano": "il cappello",
+      "inglese": "the hat",
+      "spagnolo": "el sombrero"
     },
     "55": {
       "napoletano": "'a museca",
-      "italiano": "la musica"
+      "italiano": "la musica",
+      "inglese": "the music",
+      "spagnolo": "la música"
     },
     "56": {
       "napoletano": "'a caruta",
-      "italiano": "la caduta"
+      "italiano": "la caduta",
+      "inglese": "the fall",
+      "spagnolo": "la caída"
     },
     "57": {
       "napoletano": "'o scartellato",
-      "italiano": "il gobbo"
+      "italiano": "il gobbo",
+      "inglese": "the hunchback",
+      "spagnolo": "el jorobado"
     },
     "58": {
       "napoletano": "s'è abbuccato",
-      "italiano": "si è chinato"
+      "italiano": "si è chinato",
+      "inglese": "he bent over",
+      "spagnolo": "se agachó"
     },
     "59": {
       "napoletano": "'o gallinaccio",
-      "italiano": "il tacchino"
+      "italiano": "il tacchino",
+      "inglese": "the turkey",
+      "spagnolo": "el pavo"
     },
     "60": {
       "napoletano": "se lamenta",
-      "italiano": "si lamenta"
+      "italiano": "si lamenta",
+      "inglese": "he's complaining",
+      "spagnolo": "se queja"
     },
     "61": {
       "napoletano": "'o cacciatore",
-      "italiano": "il cacciatore"
+      "italiano": "il cacciatore",
+      "inglese": "the hunter",
+      "spagnolo": "el cazador"
     },
     "62": {
       "napoletano": "'o muorto acciso",
-      "italiano": "il morto ucciso"
+      "italiano": "il morto ucciso",
+      "inglese": "the murdered man",
+      "spagnolo": "el muerto asesinado"
     },
     "63": {
       "napoletano": "'a sposa",
-      "italiano": "la sposa"
+      "italiano": "la sposa",
+      "inglese": "the bride",
+      "spagnolo": "la novia"
     },
     "64": {
       "napoletano": "'a sciammeria",
-      "italiano": "il giaccone"
+      "italiano": "il giaccone",
+      "inglese": "the tailcoat",
+      "spagnolo": "el frac"
     },
     "65": {
       "napoletano": "chiagne",
-      "italiano": "piange"
+      "italiano": "piange",
+      "inglese": "crying",
+      "spagnolo": "llora"
     },
     "66": {
       "napoletano": "'e ddoie zetelle",
-      "italiano": "le due zitelle"
+      "italiano": "le due zitelle",
+      "inglese": "the two spinsters",
+      "spagnolo": "las dos solteronas"
     },
     "67": {
       "napoletano": "'o totaro int' 'a chitarra",
-      "italiano": "il polpo"
+      "italiano": "il polpo",
+      "inglese": "the octopus",
+      "spagnolo": "el pulpo"
     },
     "68": {
       "napoletano": "'a menesta",
-      "italiano": "la minestra"
+      "italiano": "la minestra",
+      "inglese": "the soup",
+      "spagnolo": "la sopa"
     },
     "69": {
       "napoletano": "'o sotto e 'ncoppa",
-      "italiano": "il sotto e sopra"
+      "italiano": "il sotto e sopra",
+      "inglese": "the upside-down",
+      "spagnolo": "el arriba y abajo"
     },
     "70": {
       "napoletano": "'o palazzo",
-      "italiano": "il palazzo"
+      "italiano": "il palazzo",
+      "inglese": "the building",
+      "spagnolo": "el edificio"
     },
     "71": {
       "napoletano": "l'omme 'e mmerda",
-      "italiano": "l'uomo di merda"
+      "italiano": "l'uomo di merda",
+      "inglese": "the worthless man",
+      "spagnolo": "el hombre de mierda"
     },
     "72": {
       "napoletano": "'a meraviglia",
-      "italiano": "la meraviglia"
+      "italiano": "la meraviglia",
+      "inglese": "the wonder",
+      "spagnolo": "la maravilla"
     },
     "73": {
       "napoletano": "'o spitale",
-      "italiano": "l'ospedale"
+      "italiano": "l'ospedale",
+      "inglese": "the hospital",
+      "spagnolo": "el hospital"
     },
     "74": {
       "napoletano": "'a 'rotta",
-      "italiano": "la grotta"
+      "italiano": "la grotta",
+      "inglese": "the cave",
+      "spagnolo": "la cueva"
     },
     "75": {
       "napoletano": "Pullecenella",
-      "italiano": "Pulcinella"
+      "italiano": "Pulcinella",
+      "inglese": "Pulcinella",
+      "spagnolo": "Pulcinella"
     },
     "76": {
       "napoletano": "'a fontana",
-      "italiano": "la fontana"
+      "italiano": "la fontana",
+      "inglese": "the fountain",
+      "spagnolo": "la fuente"
     },
     "77": {
       "napoletano": "'e corne",
-      "italiano": "le corna"
+      "italiano": "le corna",
+      "inglese": "the horns",
+      "spagnolo": "los cuernos"
     },
     "78": {
       "napoletano": "'a puttana",
-      "italiano": "la prostituta"
+      "italiano": "la prostituta",
+      "inglese": "the prostitute",
+      "spagnolo": "la prostituta"
     },
     "79": {
       "napoletano": "'o mariuolo",
-      "italiano": "il ladro"
+      "italiano": "il ladro",
+      "inglese": "the thief",
+      "spagnolo": "el ladrón"
     },
     "80": {
       "napoletano": "'a vocca",
-      "italiano": "la bocca"
+      "italiano": "la bocca",
+      "inglese": "the mouth",
+      "spagnolo": "la boca"
     },
     "81": {
       "napoletano": "'e sciure",
-      "italiano": "i fiori"
+      "italiano": "i fiori",
+      "inglese": "the flowers",
+      "spagnolo": "las flores"
     },
     "82": {
       "napoletano": "'a tavula",
-      "italiano": "la tavola"
+      "italiano": "la tavola",
+      "inglese": "the table",
+      "spagnolo": "la mesa"
     },
     "83": {
       "napoletano": "'o pireto",
-      "italiano": "la scorreggia"
+      "italiano": "la scorreggia",
+      "inglese": "the fart",
+      "spagnolo": "el pedo"
     },
     "84": {
       "napoletano": "'a chiesa",
-      "italiano": "la chiesa"
+      "italiano": "la chiesa",
+      "inglese": "the church",
+      "spagnolo": "la iglesia"
     },
     "85": {
       "napoletano": "l'aneme 'o Priatorio",
-      "italiano": "le anime del Purgatorio"
+      "italiano": "le anime del Purgatorio",
+      "inglese": "the souls in Purgatory",
+      "spagnolo": "las almas del Purgatorio"
     },
     "86": {
       "napoletano": "'a puteca",
-      "italiano": "la bottega"
+      "italiano": "la bottega",
+      "inglese": "the shop",
+      "spagnolo": "la tienda"
     },
     "87": {
       "napoletano": "'e perucchie",
-      "italiano": "i pidocchi"
+      "italiano": "i pidocchi",
+      "inglese": "the lice",
+      "spagnolo": "los piojos"
     },
     "88": {
       "napoletano": "'e casecavalle",
-      "italiano": "i caciocavalli"
+      "italiano": "i caciocavalli",
+      "inglese": "caciocavallo cheeses",
+      "spagnolo": "los quesos caciocavallo"
     },
     "89": {
       "napoletano": "'a zoccola",
-      "italiano": "la zoccola"
+      "italiano": "la zoccola",
+      "inglese": "the sewer rat",
+      "spagnolo": "la zorra"
     },
     "90": {
       "napoletano": "'a paura",
-      "italiano": "la paura"
+      "italiano": "la paura",
+      "inglese": "fear",
+      "spagnolo": "el miedo"
     }
   }
 }

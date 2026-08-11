@@ -3,7 +3,40 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tumbulella — Concept B · Playful app</title>
+<title>Tumbulella — La Tombola Napoletana che Racconta Storie</title>
+<meta name="description" content="Gioca a tombola con la Smorfia napoletana e ascolta una storia buffa che si costruisce numero dopo numero, generata dall'AI in napoletano, italiano, inglese o spagnolo." />
+<link rel="canonical" href="https://tumbulella.it/" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" href="img/favicon-192.png" type="image/png" sizes="192x192" />
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
+<meta property="og:title" content="Tumbulella — La Tombola Napoletana che Racconta Storie" />
+<meta property="og:description" content="Gioca a tombola con la Smorfia napoletana e ascolta una storia buffa che si costruisce numero dopo numero, generata dall'AI in napoletano, italiano, inglese o spagnolo." />
+<meta property="og:image" content="https://tumbulella.it/img/og-image.jpg" />
+<meta property="og:url" content="https://tumbulella.it/" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="it_IT" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Tumbulella — La Tombola Napoletana che Racconta Storie" />
+<meta name="twitter:description" content="Gioca a tombola con la Smorfia napoletana e ascolta una storia buffa che si costruisce numero dopo numero, generata dall'AI in napoletano, italiano, inglese o spagnolo." />
+<meta name="twitter:image" content="https://tumbulella.it/img/og-image.jpg" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Tumbulella",
+  "description": "Gioca a tombola con la Smorfia napoletana e ascolta una storia buffa che si costruisce numero dopo numero, generata dall'AI in napoletano, italiano, inglese o spagnolo.",
+  "url": "https://tumbulella.it/",
+  "image": "https://tumbulella.it/img/og-image.jpg",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Web",
+  "inLanguage": ["nap", "it", "en", "es"],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+  }
+}
+</script>
 <!-- Google AdSense: script di verifica/auto-ads. L'ID cliente è pubblico
      per design (compare nell'HTML di ogni sito con AdSense), non è un
      segreto. L'AdBanner placeholder più sotto va sostituito con un vero
@@ -209,6 +242,19 @@ function AboutModal({ onClose, language }) {
             </a>
           </p>
         )}
+        {c.donation && (
+          <div className="rounded-lg bg-napoli-50 border border-napoli-900/10 p-3 mb-4 text-sm text-napoli-900/80 leading-relaxed">
+            <p className="mb-1.5">{c.donation.text}</p>
+            <a
+              href={c.donation.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-napoli-600 underline hover:text-napoli-800 transition-colors"
+            >
+              {c.donation.linkText}
+            </a>
+          </div>
+        )}
         {c.sections.map((s, i) => (
           <div key={i} className="mb-4 last:mb-0">
             <h3 className="font-display font-bold text-base text-napoli-800 mb-1.5">{s.heading}</h3>
@@ -237,6 +283,17 @@ function AboutModal({ onClose, language }) {
             })}
           </div>
         ))}
+        {c.credit && (
+          <p className="text-xs text-napoli-700/60 italic pt-3 mt-1 border-t border-napoli-900/10">
+            {c.credit.text}{" "}
+            <a
+              href={`mailto:${c.credit.email}`}
+              className="font-bold text-napoli-600 underline hover:text-napoli-800 transition-colors not-italic"
+            >
+              {c.credit.email}
+            </a>
+          </p>
+        )}
       </div>
     </div>
   );

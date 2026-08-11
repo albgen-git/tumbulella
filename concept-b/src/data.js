@@ -579,6 +579,12 @@ window.ABOUT_CONTENT = {
     title: "Cosa è Tumbulella",
     tagline: "La tombola napoletana raccontata da un'antica tradizione, in chiave moderna.",
     downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Scarica le cartelle da stampare (PDF)" },
+    donation: {
+      text: "Se questo gioco ti piace e ci giochi spesso, offrimi un piccolo contributo per sostenere Tumbulella: l'audio e l'intelligenza artificiale che generano la storia hanno un costo ad ogni numero estratto.",
+      linkText: "👉 paypal.me/AlbertoGenovese859",
+      url: "https://paypal.me/AlbertoGenovese859",
+    },
+    credit: { text: "Questo gioco è un progetto AI realizzato da Alberto Genovese. Per informazioni, scrivete a", email: "info@tumbulella.it" },
     sections: [
       {
         heading: "Cos'è Tumbulella",
@@ -620,6 +626,12 @@ window.ABOUT_CONTENT = {
     title: "Ch'è Tumbulella",
     tagline: "'A tombola napulitana cuntata da 'n'antica tradizione, a modo moderno.",
     downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Scarica 'e cartelle da stampá (PDF)" },
+    donation: {
+      text: "Se questo gioco ti piace e ci giochi spesso, offrimi un piccolo contributo per sostenere Tumbulella: l'audio e l'intelligenza artificiale che generano la storia hanno un costo ad ogni numero estratto.",
+      linkText: "👉 paypal.me/AlbertoGenovese859",
+      url: "https://paypal.me/AlbertoGenovese859",
+    },
+    credit: { text: "Questo gioco è un progetto AI realizzato da Alberto Genovese. Per informazioni, scrivete a", email: "info@tumbulella.it" },
     sections: [
       {
         heading: "Ch'è Tumbulella",
@@ -661,6 +673,12 @@ window.ABOUT_CONTENT = {
     title: "What is Tumbulella",
     tagline: "The Neapolitan tombola, told through an ancient tradition, in a modern key.",
     downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Download printable cards (PDF)" },
+    donation: {
+      text: "Se questo gioco ti piace e ci giochi spesso, offrimi un piccolo contributo per sostenere Tumbulella: l'audio e l'intelligenza artificiale che generano la storia hanno un costo ad ogni numero estratto.",
+      linkText: "👉 paypal.me/AlbertoGenovese859",
+      url: "https://paypal.me/AlbertoGenovese859",
+    },
+    credit: { text: "Questo gioco è un progetto AI realizzato da Alberto Genovese. Per informazioni, scrivete a", email: "info@tumbulella.it" },
     sections: [
       {
         heading: "What is Tumbulella",
@@ -702,6 +720,12 @@ window.ABOUT_CONTENT = {
     title: "Qué es Tumbulella",
     tagline: "El bingo napolitano contado por una antigua tradición, en clave moderna.",
     downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Descargar los cartones para imprimir (PDF)" },
+    donation: {
+      text: "Se questo gioco ti piace e ci giochi spesso, offrimi un piccolo contributo per sostenere Tumbulella: l'audio e l'intelligenza artificiale che generano la storia hanno un costo ad ogni numero estratto.",
+      linkText: "👉 paypal.me/AlbertoGenovese859",
+      url: "https://paypal.me/AlbertoGenovese859",
+    },
+    credit: { text: "Questo gioco è un progetto AI realizzato da Alberto Genovese. Per informazioni, scrivete a", email: "info@tumbulella.it" },
     sections: [
       {
         heading: "Qué es Tumbulella",
