@@ -227,15 +227,15 @@ function bareNoun(text, lang) {
 // ---------------------------------------------------------------------------
 window.TIMING = {
   CALL_MS: 900, // durata "lettura" della chiamata (fase 1)
-  PAUSE_MS: 1500, // pausa per cercare il numero sulla cartella
+  PAUSE_MS: 3000, // pausa per cercare il numero sulla cartella
   NARRATION_MS: 1300, // durata "lettura" della narrazione (fase 2)
 };
 
 window.STATUS_LABELS = {
-  nap: { calling: "'A chiammante sta chiammanno...", pausa: "🔍 Cercate 'o nummero 'ncoppa 'a cartella...", narrando: "'A chiammante sta cuntanno...", idle: "In pausa" },
-  it: { calling: "Il banditore sta chiamando...", pausa: "🔍 Cerca il numero sulla tua cartella...", narrando: "Il banditore sta raccontando...", idle: "In pausa" },
-  en: { calling: "The caller is announcing...", pausa: "🔍 Look for the number on your card...", narrando: "The caller is telling the story...", idle: "Waiting" },
-  es: { calling: "El presentador está llamando...", pausa: "🔍 Busca el número en tu cartón...", narrando: "El presentador está contando...", idle: "En espera" },
+  nap: { calling: "'A chiammante sta chiammanno...", pausa: "🔍 Ricerca d''o nummero...", narrando: "'A chiammante sta cuntanno...", idle: "In pausa" },
+  it: { calling: "Il banditore sta chiamando...", pausa: "🔍 Ricerca del numero...", narrando: "Il banditore sta raccontando...", idle: "In pausa" },
+  en: { calling: "The caller is announcing...", pausa: "🔍 Looking for the number...", narrando: "The caller is telling the story...", idle: "Waiting" },
+  es: { calling: "El presentador está llamando...", pausa: "🔍 Buscando el número...", narrando: "El presentador está contando...", idle: "En espera" },
 };
 
 window.EMPTY_STATE_TEXT = {

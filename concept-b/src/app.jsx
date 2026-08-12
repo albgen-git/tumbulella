@@ -465,6 +465,13 @@ function App() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button
+              onClick={handleNewStory}
+              title="Nuova storia"
+              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
+            >
+              🔄
+            </button>
+            <button
               onClick={() => setShowAbout(true)}
               title="Cosa è Tumbulella"
               className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
@@ -503,13 +510,6 @@ function App() {
               className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
             >
               🎲
-            </button>
-            <button
-              onClick={handleNewStory}
-              title="Nuova storia"
-              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
-            >
-              🔄
             </button>
           </div>
         </div>
