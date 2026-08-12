@@ -496,9 +496,21 @@ function App() {
     setPhase("narrando");
     const prefix = window.buildPrefix(item.n, lang);
     const previousNumbers = orderRef.current.slice(0, item.clickIndex);
+    const isFirstTurn = previousNumbers.length === 0;
+    // La fetch parte SUBITO (mai bloccata dal filler): il backend su Render
+    // va in sleep dopo un po' di inattività e la prima richiesta di una
+    // nuova partita può metterci fino a un minuto a risvegliarlo.
+    const narrationPromise = window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
+    narrationPromise.catch(() => {}); // evita un warning di "unhandled rejection" nel frattempo: l'errore vero resta gestito sotto, nel try/catch
+    if (isFirstTurn && !mutedRef.current) {
+      // Riempitivo letto in locale (Web Speech, mai Gemini) in parallelo
+      // all'attesa del backend, così il primo numero non resta muto.
+      await window.speakWebSpeech(window.COLD_START_FILLER[lang] || window.COLD_START_FILLER.nap, lang, false);
+      if (sessionRef.current !== session) return;
+    }
     let narration;
     try {
-      narration = await window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
+      narration = await narrationPromise;
     } catch (err) {
       if (sessionRef.current !== session) return;
       const errText =
@@ -516,7 +528,6 @@ function App() {
     // contesto e non sarebbe mai più recuperabile dal modello. Si arricchisce
     // solo ciò che va in memoria per i turni successivi, MAI ciò che si vede
     // o si sente ora (eviterebbe di ripetere il numero appena annunciato).
-    const isFirstTurn = previousNumbers.length === 0;
     const memorized = isFirstTurn ? window.meaningOnly(item.n, lang) + ". " + narration : narration;
     // FIFO di lunghezza 2: tiene solo le ultime due frasi generate.
     lastSentencesRef.current = [...lastSentencesRef.current, memorized].slice(-2);

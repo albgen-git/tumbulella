@@ -220,14 +220,15 @@ function bareNoun(text, lang) {
 //  Fase 1 — "chiamata": solo numero + nome Smorfia, letta subito (no LLM).
 //  Fase 2 — "narrazione": dopo una pausa, la frase che lega il numero al
 //           filo narrativo (qui: al numero immediatamente precedente).
-// Le costanti sotto sono tempi DEMO compressi rispetto ai ~10s reali di
-// pausa previsti a regime (giusto per rendere il prototipo comodo da
-// testare) — facilmente regolabili qui.
+// Le costanti sotto valgono solo come fallback quando il TTS non è
+// disponibile (altrimenti il ritmo lo detta la durata reale della voce, vedi
+// speakOrWait) — TRANNE PAUSE_MS, sempre applicata (pausa fissa per cercare
+// il numero sulla cartella). Ridotte per un ritmo più serrato.
 // ---------------------------------------------------------------------------
 window.TIMING = {
-  CALL_MS: 1300, // durata "lettura" della chiamata (fase 1)
-  PAUSE_MS: 2600, // pausa per cercare il numero sulla cartella (compressa; a regime ~10s)
-  NARRATION_MS: 1900, // durata "lettura" della narrazione (fase 2)
+  CALL_MS: 900, // durata "lettura" della chiamata (fase 1)
+  PAUSE_MS: 1500, // pausa per cercare il numero sulla cartella
+  NARRATION_MS: 1300, // durata "lettura" della narrazione (fase 2)
 };
 
 window.STATUS_LABELS = {
@@ -294,6 +295,20 @@ window.pickRandomExclamation = function (lang) {
 };
 
 // ---------------------------------------------------------------------------
+// Frase "riempitivo" al primo numero della partita, letta SEMPRE via Web
+// Speech locale (mai Gemini) e in parallelo alla prima chiamata al backend
+// (vedi playSequence in index.html): il backend su Render va in sleep dopo
+// un po' di inattività e la prima richiesta può metterci fino a ~1 minuto a
+// risvegliarlo. Senza questa frase, quel minuto sarebbe silenzio morto.
+// ---------------------------------------------------------------------------
+window.COLD_START_FILLER = {
+  nap: "Jamme, sistemate 'e cartelle ca accumminciammo!",
+  it: "Iniziate a sistemare le cartelle, si comincia!",
+  en: "Start setting up your cards, here we go!",
+  es: "Empezad a preparar los cartones, ya arrancamos!",
+};
+
+// ---------------------------------------------------------------------------
 // TTS reale via Web Speech API del browser (gratuita, nessuna chiamata
 // server) — come da requisiti per l'MVP: napoletano usa la voce italiana più
 // vicina disponibile (nessun browser ha una voce dialettale nativa, quindi
@@ -329,15 +344,55 @@ if (window.speechSynthesis) {
   warmUpVoices(8); // ~6-7s di tentativi in background, appena si apre la pagina
 }
 
+// Bug noto di Chrome/Edge: speechSynthesis "si addormenta" dopo periodi di
+// inattività (o durante letture lunghe) e può smettere di produrre audio pur
+// continuando a generare normalmente gli eventi onstart/onend — sintomo
+// esatto di "vedo il banditore ma non sento nulla". Il workaround standard è
+// tenerlo "sveglio" con pause/resume periodici mentre sta parlando.
+if (window.speechSynthesis) {
+  setInterval(function () {
+    var synth = window.speechSynthesis;
+    if (synth.speaking) {
+      synth.pause();
+      synth.resume();
+    }
+  }, 10000);
+}
+
+// Nomi di voci tipicamente maschili per lingua (solo euristica sul nome:
+// l'API Web Speech non espone il genere) — usati per restare sulla stessa
+// identità vocale del progetto (voce maschile, come "Diego") anche quando
+// Diego non è installato, invece di ricadere su qualunque voce disponibile
+// per caso sul dispositivo. Causa nota della voce maschile su Edge desktop
+// e femminile su Chrome mobile: prima la preferenza remoto/locale sceglieva
+// voci diverse per pura disponibilità, non per genere.
+var MALE_VOICE_NAME_PATTERNS = {
+  it: /diego|cosimo|luca|giorgio|riccardo|matteo|paolo/i,
+  en: /guy|david|mark|daniel|matthew|ryan|george|james/i,
+  es: /jorge|pablo|[aá]lvaro|enrique|fernando|diego/i,
+};
+
 // Preferisce sempre la voce "Diego" (se presente nel browser/sistema),
 // indipendentemente dalla lingua richiesta — per napoletano/italiano è la
-// voce scelta per il progetto. Se non è disponibile, ricade sulla vecchia
-// logica (una voce Remote qualunque per la lingua, poi Local).
+// voce scelta per il progetto. Se non è disponibile, prova un'altra voce
+// maschile nota per la lingua richiesta, poi ricade sulla vecchia logica
+// (una voce Remote qualunque per la lingua, poi Local).
 function pickVoice(voices, bcp47) {
   var base = bcp47.split("-")[0].toLowerCase();
 
   var diego = voices.filter(function (v) { return /diego/i.test(v.name); });
   if (diego.length) return diego[0];
+
+  var malePattern = MALE_VOICE_NAME_PATTERNS[base];
+  if (malePattern) {
+    var maleMatches = voices.filter(function (v) {
+      return v.lang && v.lang.toLowerCase().indexOf(base) === 0 && malePattern.test(v.name);
+    });
+    if (maleMatches.length) {
+      var maleRemote = maleMatches.filter(function (v) { return !v.localService; });
+      return maleRemote.length ? maleRemote[0] : maleMatches[0];
+    }
+  }
 
   var remoteExact = voices.filter(function (v) { return !v.localService && v.lang === bcp47; });
   if (remoteExact.length) return remoteExact[0];
@@ -416,6 +471,10 @@ function speakWebSpeech(text, lang, muted) {
   if (muted || !synth || typeof SpeechSynthesisUtterance === "undefined") {
     return Promise.resolve(false);
   }
+  // Ripulisce eventuali utterance precedenti rimaste "appese" nella coda:
+  // in alcuni casi il motore vocale si blocca su una lettura precedente e
+  // quella nuova non parte mai (nessun suono, ma onend/onstart normali).
+  synth.cancel();
   var bcp47 = window.VOICE_LANG[lang] || "it-IT";
   // Lettura SINCRONA delle voci (niente Promise/setTimeout qui dentro): la
   // lista dovrebbe già essere pronta grazie a warmUpVoices() fatto partire al
@@ -449,9 +508,14 @@ function speakWebSpeech(text, lang, muted) {
     utter.onerror = function () {
       resolve(true);
     };
-    synth.speak(utter);
+    // Piccolo ritardo dopo cancel(): parlare nello stesso tick di un cancel()
+    // può far perdere la nuova utterance in Chrome/Edge (bug noto).
+    setTimeout(function () {
+      synth.speak(utter);
+    }, 30);
   });
 };
+window.speakWebSpeech = speakWebSpeech; // esposta per il filler audio d'avvio (index.html), che deve restare gratuito/locale anche per il napoletano
 
 window.stopSpeaking = function () {
   if (window.speechSynthesis) window.speechSynthesis.cancel();

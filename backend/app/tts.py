@@ -8,13 +8,20 @@ ritira o cambia comportamento, il piano B documentato è ElevenLabs.
 
 import io
 import os
+import time
 import wave
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 
 MODEL_NAME = os.getenv("TUMBULELLA_TTS_MODEL", "gemini-3.1-flash-tts-preview")
 VOICE_NAME = os.getenv("TUMBULELLA_TTS_VOICE", "Puck")
+
+# Un solo retry breve: se anche questo fallisce, il frontend ricade comunque
+# su Web Speech (vedi data.js) — meglio non far aspettare troppo prima del
+# fallback che insistere a lungo su un servizio sovraccarico.
+MAX_RETRIES = 1
+RETRY_BACKOFF_SECONDS = [1.0]
 
 
 class TTSNotConfiguredError(RuntimeError):
@@ -47,21 +54,32 @@ def _pcm_to_wav(pcm_bytes: bytes, sample_rate: int, channels: int, sample_width:
     return buf.getvalue()
 
 
+def _generate_content_with_retry(client: genai.Client, text: str):
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            return client.models.generate_content(
+                model=MODEL_NAME,
+                contents=text,
+                config=types.GenerateContentConfig(
+                    response_modalities=["AUDIO"],
+                    speech_config=types.SpeechConfig(
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=VOICE_NAME)
+                        )
+                    ),
+                ),
+            )
+        except errors.ServerError:
+            if attempt < MAX_RETRIES:
+                time.sleep(RETRY_BACKOFF_SECONDS[attempt])
+                continue
+            raise
+
+
 def generate_speech(text: str) -> bytes:
     """Genera l'audio (WAV) per il testo dato, in napoletano, voce "Puck"."""
     client = _get_client()
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=text,
-        config=types.GenerateContentConfig(
-            response_modalities=["AUDIO"],
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=VOICE_NAME)
-                )
-            ),
-        ),
-    )
+    response = _generate_content_with_retry(client, text)
     part = response.candidates[0].content.parts[0]
     pcm_bytes = part.inline_data.data
     # mime_type tipico: "audio/l16; rate=24000; channels=1" — 16 bit = 2 byte/campione.

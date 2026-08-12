@@ -8,6 +8,7 @@ requirements.md per non introdurre persistenza nell'MVP.
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+from google.genai import errors as genai_errors
 
 load_dotenv()  # legge backend/.env se presente, prima di leggere GEMINI_API_KEY
 
@@ -90,6 +91,12 @@ def narrate(req: NarrateRequest) -> NarrateResponse:
         narration = generate_narration(system_prompt, user_prompt)
     except LLMNotConfiguredError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
+    except genai_errors.ServerError as e:
+        # Gemini sovraccarico (503) anche dopo i retry — messaggio pulito,
+        # non il JSON grezzo dell'errore (vedi llm_client.py per i retry).
+        raise HTTPException(
+            status_code=503, detail="il servizio di narrazione è momentaneamente sovraccarico, riprova tra qualche secondo"
+        ) from e
     except Exception as e:  # errori di rete/API Gemini
         raise HTTPException(status_code=502, detail=f"Errore nella generazione: {e}") from e
 
@@ -107,6 +114,10 @@ def text_to_speech(req: TTSRequest) -> Response:
         audio_wav = tts.generate_speech(req.text)
     except tts.TTSNotConfiguredError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
+    except genai_errors.ServerError as e:
+        raise HTTPException(
+            status_code=503, detail="il servizio audio è momentaneamente sovraccarico, riprova tra qualche secondo"
+        ) from e
     except Exception as e:  # errori di rete/API Gemini
         raise HTTPException(status_code=502, detail=f"Errore nella generazione audio: {e}") from e
 

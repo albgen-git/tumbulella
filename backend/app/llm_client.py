@@ -3,9 +3,16 @@ della narrazione. Chiamato solo dalla fase 2 (narrazione) — la fase 1
 (chiamata) resta un lookup puro, vedi app/main.py."""
 
 import os
+import time
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
+
+# Gemini a volte risponde 503 UNAVAILABLE per sovraccarico temporaneo del
+# modello (osservato in produzione) — pochi retry ravvicinati bastano quasi
+# sempre, e c'è margine: la fase 2 ha già ~10s di pausa naturale del gioco.
+MAX_RETRIES = 2
+RETRY_BACKOFF_SECONDS = [1.5, 3.0]
 
 # "Flash lite": modello economico/veloce, adatto a frammenti brevi generati
 # ad ogni click. Costante separata così è facile da cambiare in un punto
@@ -46,16 +53,23 @@ def _get_client() -> genai.Client:
 
 def generate_narration(system_prompt: str, user_prompt: str) -> str:
     client = _get_client()
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=user_prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt,
-            max_output_tokens=MAX_OUTPUT_TOKENS,
-            thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET),
-        ),
-    )
-    return (response.text or "").strip()
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    max_output_tokens=MAX_OUTPUT_TOKENS,
+                    thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET),
+                ),
+            )
+            return (response.text or "").strip()
+        except errors.ServerError:
+            if attempt < MAX_RETRIES:
+                time.sleep(RETRY_BACKOFF_SECONDS[attempt])
+                continue
+            raise
 
 
 def is_configured() -> bool:
