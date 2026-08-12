@@ -484,6 +484,24 @@ function App() {
   // Ogni `await` verifica che la sessione sia ancora valida (nessun reset nel frattempo).
   async function playSequence(item, session) {
     const lang = languageRef.current;
+    const previousNumbers = orderRef.current.slice(0, item.clickIndex);
+    const isFirstTurn = previousNumbers.length === 0;
+
+    // Al primo numero della partita, PRIMA di ogni altra cosa: si avvia
+    // subito la fetch della narrazione (il backend su Render potrebbe
+    // essere in sleep e metterci fino a un minuto a risvegliarsi — più
+    // presto parte, più tempo ha) e si legge il filler in locale (Web
+    // Speech, mai Gemini). Ordine voluto: filler -> chiamata -> narrazione,
+    // non chiamata -> filler, che suonava come una sequenza scucita.
+    let narrationPromise = null;
+    if (isFirstTurn) {
+      narrationPromise = window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
+      narrationPromise.catch(() => {}); // evita un warning di "unhandled rejection" nel frattempo: l'errore vero resta gestito sotto, nel try/catch
+      if (!mutedRef.current) {
+        await window.speakWebSpeech(window.COLD_START_FILLER[lang] || window.COLD_START_FILLER.nap, lang, false);
+        if (sessionRef.current !== session) return;
+      }
+    }
 
     setPhase("calling");
     const callText = window.buildCall(item.n, lang);
@@ -495,18 +513,8 @@ function App() {
 
     setPhase("narrando");
     const prefix = window.buildPrefix(item.n, lang);
-    const previousNumbers = orderRef.current.slice(0, item.clickIndex);
-    const isFirstTurn = previousNumbers.length === 0;
-    // La fetch parte SUBITO (mai bloccata dal filler): il backend su Render
-    // va in sleep dopo un po' di inattività e la prima richiesta di una
-    // nuova partita può metterci fino a un minuto a risvegliarlo.
-    const narrationPromise = window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
-    narrationPromise.catch(() => {}); // evita un warning di "unhandled rejection" nel frattempo: l'errore vero resta gestito sotto, nel try/catch
-    if (isFirstTurn && !mutedRef.current) {
-      // Riempitivo letto in locale (Web Speech, mai Gemini) in parallelo
-      // all'attesa del backend, così il primo numero non resta muto.
-      await window.speakWebSpeech(window.COLD_START_FILLER[lang] || window.COLD_START_FILLER.nap, lang, false);
-      if (sessionRef.current !== session) return;
+    if (!narrationPromise) {
+      narrationPromise = window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
     }
     let narration;
     try {
