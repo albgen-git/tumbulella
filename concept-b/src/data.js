@@ -345,19 +345,15 @@ if (window.speechSynthesis) {
 }
 
 // Bug noto di Chrome/Edge: speechSynthesis "si addormenta" dopo periodi di
-// inattività (o durante letture lunghe) e può smettere di produrre audio pur
-// continuando a generare normalmente gli eventi onstart/onend — sintomo
-// esatto di "vedo il banditore ma non sento nulla". Il workaround standard è
-// tenerlo "sveglio" con pause/resume periodici mentre sta parlando.
-if (window.speechSynthesis) {
-  setInterval(function () {
-    var synth = window.speechSynthesis;
-    if (synth.speaking) {
-      synth.pause();
-      synth.resume();
-    }
-  }, 10000);
-}
+// inattività e può smettere di produrre audio pur continuando a generare
+// normalmente gli eventi onstart/onend. Prima si teneva "sveglio" con
+// pause/resume periodici MENTRE stava parlando, ma le nostre letture sono
+// sempre brevi (pochi secondi) — interrompere una lettura in corso ogni 10s
+// rischiava di far restare il motore bloccato a metà (sintomo: l'app resta
+// ferma su "sta raccontando" senza mai sentire nulla né finire). Il risveglio
+// va fatto SOLO prima di iniziare una nuova lettura (mai durante), vedi
+// speakWebSpeech; qui sotto resta solo il timeout di sicurezza a livello di
+// singola utterance.
 
 // Nomi di voci tipicamente maschili per lingua (solo euristica sul nome:
 // l'API Web Speech non espone il genere) — usati per restare sulla stessa
@@ -471,9 +467,12 @@ function speakWebSpeech(text, lang, muted) {
   if (muted || !synth || typeof SpeechSynthesisUtterance === "undefined") {
     return Promise.resolve(false);
   }
-  // Ripulisce eventuali utterance precedenti rimaste "appese" nella coda:
-  // in alcuni casi il motore vocale si blocca su una lettura precedente e
-  // quella nuova non parte mai (nessun suono, ma onend/onstart normali).
+  // "Sveglia" il motore prima di ogni nuova lettura (mai durante una lettura
+  // in corso, vedi nota sopra warmUpVoices) e ripulisce eventuali utterance
+  // precedenti rimaste "appese" nella coda: in alcuni casi il motore vocale
+  // si blocca su una lettura precedente e quella nuova non parte mai
+  // (nessun suono, ma onend/onstart normali).
+  synth.resume();
   synth.cancel();
   var bcp47 = window.VOICE_LANG[lang] || "it-IT";
   // Lettura SINCRONA delle voci (niente Promise/setTimeout qui dentro): la
@@ -502,12 +501,27 @@ function speakWebSpeech(text, lang, muted) {
     window.__lastVoiceUsed = voiceLabel;
     window.__lastVoiceCount = voices.length;
     console.log("[Tumbulella TTS] voce scelta:", voiceLabel, "— " + voices.length + " voci disponibili in totale");
+    var settled = false;
+    var safetyTimer = null;
+    function finish(ok) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(safetyTimer);
+      resolve(ok);
+    }
     utter.onend = function () {
-      resolve(true);
+      finish(true);
     };
     utter.onerror = function () {
-      resolve(true);
+      finish(true);
     };
+    // Rete di sicurezza: se il motore si blocca (nessun onend/onerror in
+    // arrivo), non si resta fermi per sempre su "sta raccontando" — si
+    // sblocca comunque la UI dopo un tempo ampio, proporzionale al testo.
+    safetyTimer = setTimeout(function () {
+      synth.cancel();
+      finish(true);
+    }, Math.max(4000, text.length * 110) + 4000);
     // Piccolo ritardo dopo cancel(): parlare nello stesso tick di un cancel()
     // può far perdere la nuova utterance in Chrome/Edge (bug noto).
     setTimeout(function () {

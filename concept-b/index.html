@@ -581,8 +581,14 @@ function App() {
   // Pulsante "!" — esortazione buffa per i momenti morti tra un numero e
   // l'altro. Frase statica (mai LLM, mai narrazione), solo letta ad alta
   // voce: non tocca fragments/story, non entra in coda con chiamata/narrazione.
+  // Chiama window.speak DIRETTAMENTE, fuori dalla coda di playSequence: se
+  // premuto mentre il banditore sta ancora parlando, il cancel() interno a
+  // speakWebSpeech tagliava a metà l'audio in corso (e veniva comunque
+  // trattato come "letto con successo") — da qui il sintomo "vedo narrando
+  // ma non sento nulla". Va quindi permesso solo quando non c'è nulla in
+  // corso, coerente con lo scopo stesso del pulsante ("momenti morti").
   const handleExclamation = () => {
-    if (muted) return;
+    if (muted || phase !== "idle") return;
     window.speak(window.pickRandomExclamation(language), language, false);
   };
 
@@ -633,9 +639,15 @@ function App() {
             </button>
             <button
               onClick={handleExclamation}
-              disabled={muted}
-              title={muted ? "Riattiva la voce per usare l'esortazione" : "Un po' di sveglia per tutti!"}
-              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0"
+              disabled={muted || phase !== "idle"}
+              title={
+                muted
+                  ? "Riattiva la voce per usare l'esortazione"
+                  : phase !== "idle"
+                  ? "Aspetta che il banditore finisca..."
+                  : "Un po' di sveglia per tutti!"
+              }
+              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               !
             </button>
