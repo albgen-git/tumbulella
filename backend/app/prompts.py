@@ -119,7 +119,10 @@ def bold_smorfia_words(text: str, numbers: list[int], language: str) -> str:
         # richiedere l'apostrofo evita di "mangiare" per sbaglio l'ultima
         # lettera di articoli non elisi come "la"/"lo" (es. "la mamma" deve
         # restare "la **mamma**", non "l**a mamma**").
-        pattern = re.compile(r"((?:['ʼ][aeo]\s+)?" + _accent_tolerant(core) + r")", re.IGNORECASE)
+        # \b prima e dopo il "nucleo": senza, una parola corta come "Re" (numero
+        # 15) matcha come sottostringa dentro qualunque parola che la contiene,
+        # es. "rimette**re**" o "dec**re**tare" — bug osservato in produzione.
+        pattern = re.compile(r"((?:['ʼ][aeo]\s+)?\b" + _accent_tolerant(core) + r"\b)", re.IGNORECASE)
         text = pattern.sub(r"**\1**", text, count=0)
     return text
 
