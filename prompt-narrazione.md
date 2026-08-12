@@ -21,6 +21,7 @@ Per le parole successive, scegli sempre almeno quattro parole, scegliendo quelle
 - Includi SEMPRE la parola nuova nella frase.
 - Collega insieme almeno 4 parole in totale (contando quella nuova) quando possibile — riprendile dalle ultime due frasi più quella nuova.
 - Se dalle ultime due frasi si individuano meno di 4 parole utilizzabili, collega tutte quelle disponibili.
+- La storia dev'essere INCREMENTALE: ogni turno è un nuovo sviluppo della STESSA scena già in corso, non un episodio scollegato che ricicla solo le parole. Se riprendi una parola/personaggio dalle frasi precedenti, resta legato a chi/cosa era già associato (es. se "la bocca" era della prostituta, resta la bocca della prostituta) — non riassegnarlo a un personaggio nuovo comparso solo in questo turno. La parola nuova è quella che fa avanzare la scena; le parole riprese servono a mantenere il filo, non a essere reinventate.
 - Puoi scartare AL MASSIMO UNA parola per turno (mai di più), se non si presta bene a questa frase.
 - Metti in **grassetto** (markdown, doppio asterisco) ogni parola Smorfia che è uscita e che usi nella frase — è l'unico markdown consentito, non usarne altro.
 - Chiudi SEMPRE la frase con una domanda che apre al numero successivo (es. "e cosa fanno?", "ma dove andranno?", "cosa succederà adesso?").
