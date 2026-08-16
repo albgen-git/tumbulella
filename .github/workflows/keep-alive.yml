@@ -1,0 +1,18 @@
+name: Keep backend awake
+
+# Il backend su Render (piano gratuito) va in sleep dopo ~15 minuti di
+# inattivita' e la richiesta successiva paga fino a ~60s di risveglio a
+# freddo (vedi conversazione con l'utente). Questo workflow chiama
+# /api/health ogni 10 minuti per non far mai spegnere il container.
+# Repo pubblico: i minuti di GitHub Actions sono gratuiti/illimitati.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health
+        run: curl -sf -m 30 https://tumbulella.onrender.com/api/health

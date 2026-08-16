@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Consolle Admin — Tumbulella</title>
+<style>
+  :root { --napoli-800: #0e4c78; --napoli-700: #0c5c94; --napoli-600: #0a72b8; --napoli-500: #0f92e0; --napoli-100: #cceeff; --napoli-50: #eaf7ff; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--napoli-50); color: #0c3b5e; margin: 0; padding: 24px; }
+  h1 { color: var(--napoli-800); font-size: 22px; margin: 0 0 4px; }
+  .subtitle { color: #0c3b5e99; font-size: 13px; margin-bottom: 24px; }
+  .card { background: white; border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(12,59,94,0.12); max-width: 760px; }
+  h2 { font-size: 16px; color: var(--napoli-800); margin: 0 0 14px; }
+  .lang-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--napoli-50); flex-wrap: wrap; }
+  .lang-row:last-child { border-bottom: none; }
+  .lang-label { font-weight: 700; width: 46px; flex-shrink: 0; }
+  .prod-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: #e8f4ea; color: #1a6b2e; margin-left: auto; white-space: nowrap; }
+  .prod-badge.stale { background: #fff3cd; color: #7a5c00; }
+  .prod-badge.off { background: #f0f0f0; color: #66666699; }
+  .prod-badge.unknown { background: #f0f0f0; color: #666; }
+  select { padding: 6px 8px; border-radius: 8px; border: 1px solid #cce; font-size: 13px; }
+  button { cursor: pointer; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 600; }
+  .btn-primary { background: var(--napoli-600); color: white; }
+  .btn-primary:hover { background: var(--napoli-700); }
+  .btn-secondary { background: var(--napoli-100); color: var(--napoli-800); }
+  .btn-secondary:hover { background: #b8e2ff; }
+  .btn-danger { background: #f0492f; color: white; }
+  .btn-danger:hover { background: #d63a22; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status { font-size: 12px; margin-left: 8px; color: #0c3b5e99; }
+  .file-list { max-height: 320px; overflow-y: auto; border: 1px solid var(--napoli-50); border-radius: 8px; padding: 8px; margin: 10px 0; }
+  .file-row { display: flex; align-items: center; gap: 8px; padding: 3px 4px; font-family: ui-monospace, monospace; font-size: 12px; }
+  .file-row .tag { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: var(--napoli-100); color: var(--napoli-700); }
+  .file-row .tag.untracked { background: #fff3cd; color: #7a5c00; }
+  textarea { width: 100%; min-height: 60px; border-radius: 8px; border: 1px solid #cce; padding: 8px; font-family: inherit; font-size: 13px; }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+  .output { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px; background: #0c3b5e0d; border-radius: 8px; padding: 10px; margin-top: 10px; max-height: 200px; overflow-y: auto; }
+  .warn { background: #fff3cd; color: #7a5c00; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 20px; max-width: 760px; }
+</style>
+</head>
+<body>
+<h1>🎛️ Consolle Admin — Tumbulella</h1>
+<p class="subtitle">Solo locale — gira su questo PC, non fa parte del sito pubblico.</p>
+
+<div class="warn">⚠️ Attivare Gemini TTS su una lingua ha un costo reale (~0,005€ a turno) e non è più coperto dal margine del piano premium napoletano, pensato solo per il napoletano. Valutalo prima di attivarlo su italiano/inglese/spagnolo.</div>
+
+<div class="card">
+  <h2>Voci TTS per lingua</h2>
+  <div id="langRows"></div>
+  <div class="actions">
+    <button class="btn-primary" id="saveVoicesBtn">Salva configurazione</button>
+    <span class="status" id="voicesStatus"></span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Rilascio in produzione</h2>
+  <div class="actions">
+    <button class="btn-secondary" id="releaseLocalBtn" title="Salva la config voci e apre il gioco in locale (backend :8000) per testare, es. su Edge, prima di pubblicare">🧪 Rilascia localmente</button>
+    <span class="status" id="voicesStatus"></span>
+  </div>
+  <p style="font-size:12px; color:#0c3b5e88; margin: 4px 0 14px;">"Rilascia localmente" apre il gioco puntato sul backend di sviluppo (127.0.0.1:8000, deve essere già avviato a parte) — non tocca la produzione. Usalo per testare le voci prima di premere "Rilascia" qui sotto.</p>
+  <div class="actions">
+    <button class="btn-secondary" id="refreshStatusBtn">Aggiorna stato repo</button>
+    <span class="status" id="branchLabel"></span>
+  </div>
+  <div class="file-list" id="fileList"><em style="color:#0c3b5e66">Premi "Aggiorna stato repo" per vedere le modifiche in sospeso.</em></div>
+  <label style="font-size:13px; font-weight:600; display:block; margin-top:10px;">Messaggio di commit</label>
+  <textarea id="commitMessage" placeholder="Descrivi cosa stai pubblicando..."></textarea>
+  <div class="actions">
+    <button class="btn-danger" id="releaseBtn" disabled>🚀 Rilascia</button>
+    <span class="status" id="releaseStatus"></span>
+  </div>
+  <div class="output" id="releaseOutput" style="display:none"></div>
+</div>
+
+<audio id="testAudio" style="display:none"></audio>
+
+<script>
+const LANGS = [
+  { code: "nap", label: "NAP" },
+  { code: "it", label: "IT" },
+  { code: "en", label: "EN" },
+  { code: "es", label: "ES" },
+];
+
+// Voci Gemini TTS predefinite (modello gemini-3.1-flash-tts-preview), con
+// una breve caratterizzazione indicativa — usa "Prova voce" per giudicare
+// davvero, la descrizione è solo un punto di partenza.
+const VOICES = [
+  ["Puck", "vivace"], ["Charon", "informativo"], ["Kore", "deciso"], ["Fenrir", "esuberante"],
+  ["Leda", "giovanile"], ["Orus", "fermo"], ["Aoede", "brioso"], ["Callirrhoe", "disinvolto"],
+  ["Autonoe", "brillante"], ["Enceladus", "sussurrato"], ["Iapetus", "chiaro"], ["Umbriel", "rilassato"],
+  ["Algieba", "morbido"], ["Despina", "morbido"], ["Erinome", "chiaro"], ["Algenib", "roco"],
+  ["Rasalgethi", "informativo"], ["Laomedeia", "vivace"], ["Achernar", "soffice"], ["Alnilam", "fermo"],
+  ["Schedar", "regolare"], ["Gacrux", "maturo"], ["Pulcherrima", "diretto"], ["Achird", "amichevole"],
+  ["Zubenelgenubi", "casuale"], ["Vindemiatrix", "delicato"], ["Sadachbia", "brioso"], ["Sadaltager", "esperto"],
+  ["Sulafat", "caldo"], ["Zephyr", "brillante"],
+];
+
+let currentConfig = {};
+let lastProductionConfig = null;
+
+function getEffectiveVoice(row) {
+  const custom = row.querySelector(".customVoiceInput").value.trim();
+  return custom || row.querySelector(".voiceSelect").value;
+}
+
+function updateProductionBadges(prodConfig) {
+  LANGS.forEach(({ code }) => {
+    const badge = document.querySelector(`.prod-badge[data-prod-lang="${code}"]`);
+    const row = document.querySelector(`.lang-row[data-lang="${code}"]`);
+    if (!badge || !row) return;
+    const prodEntry = prodConfig[code] || { enabled: false, voice: null };
+    const localEngine = row.querySelector(".engineSelect").value;
+    const localVoice = getEffectiveVoice(row);
+    const prodLabel = prodEntry.enabled ? ("Gemini · " + prodEntry.voice) : "Web Speech";
+    const matchesLocal =
+      prodEntry.enabled === (localEngine === "gemini") &&
+      (!prodEntry.enabled || prodEntry.voice === localVoice);
+    badge.textContent = "🟢 in produzione: " + prodLabel + (matchesLocal ? "" : " (diverso da qui sotto)");
+    badge.className = "prod-badge" + (matchesLocal ? "" : " stale");
+  });
+}
+
+async function refreshProductionConfig() {
+  LANGS.forEach(({ code }) => {
+    const badge = document.querySelector(`.prod-badge[data-prod-lang="${code}"]`);
+    if (badge) { badge.textContent = "🔵 produzione: verifico..."; badge.className = "prod-badge unknown"; }
+  });
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch("https://tumbulella.onrender.com/api/tts-config", { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    lastProductionConfig = await res.json();
+    updateProductionBadges(lastProductionConfig);
+  } catch (e) {
+    LANGS.forEach(({ code }) => {
+      const badge = document.querySelector(`.prod-badge[data-prod-lang="${code}"]`);
+      if (badge) { badge.textContent = "⚪ produzione non raggiungibile (magari in sleep, riprova)"; badge.className = "prod-badge unknown"; }
+    });
+  }
+}
+
+function buildLangRows(config) {
+  const container = document.getElementById("langRows");
+  container.innerHTML = "";
+  LANGS.forEach(({ code, label }) => {
+    const entry = config[code] || { engine: "webspeech", voice: null };
+    const isKnownVoice = VOICES.some(([name]) => name === entry.voice);
+    const row = document.createElement("div");
+    row.className = "lang-row";
+    row.dataset.lang = code;
+    row.innerHTML = `
+      <span class="lang-label">${label}</span>
+      <select class="engineSelect">
+        <option value="webspeech" ${entry.engine === "webspeech" ? "selected" : ""}>Web Speech (gratis)</option>
+        <option value="gemini" ${entry.engine === "gemini" ? "selected" : ""}>Gemini TTS (a pagamento)</option>
+      </select>
+      <select class="voiceSelect" ${entry.engine !== "gemini" ? "disabled" : ""}>
+        ${VOICES.map(([name, desc]) => `<option value="${name}" ${entry.voice === name && isKnownVoice ? "selected" : ""}>${name} — ${desc}</option>`).join("")}
+      </select>
+      <input type="text" class="customVoiceInput" placeholder="o scrivi il nome di una voce nuova..." style="width:190px" value="${entry.engine === "gemini" && entry.voice && !isKnownVoice ? entry.voice : ""}" />
+      <button class="btn-secondary testBtn">🔊 Prova voce</button>
+      <span class="status testStatus"></span>
+      <span class="prod-badge" data-prod-lang="${code}">🔵 produzione: verifico...</span>
+    `;
+    container.appendChild(row);
+
+    const engineSelect = row.querySelector(".engineSelect");
+    const voiceSelect = row.querySelector(".voiceSelect");
+    const customVoiceInput = row.querySelector(".customVoiceInput");
+    engineSelect.addEventListener("change", () => {
+      voiceSelect.disabled = engineSelect.value !== "gemini";
+      if (lastProductionConfig) updateProductionBadges(lastProductionConfig);
+    });
+    voiceSelect.addEventListener("change", () => {
+      if (lastProductionConfig) updateProductionBadges(lastProductionConfig);
+    });
+    customVoiceInput.addEventListener("input", () => {
+      if (lastProductionConfig) updateProductionBadges(lastProductionConfig);
+    });
+
+    row.querySelector(".testBtn").addEventListener("click", async () => {
+      const testStatus = row.querySelector(".testStatus");
+      testStatus.textContent = "Genero...";
+      try {
+        const res = await fetch("/api/tts-voices/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ language: code, voice: getEffectiveVoice(row) }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || ("HTTP " + res.status));
+        }
+        const blob = await res.blob();
+        const audio = document.getElementById("testAudio");
+        audio.src = URL.createObjectURL(blob);
+        audio.play();
+        testStatus.textContent = "";
+      } catch (e) {
+        testStatus.textContent = "Errore: " + e.message;
+      }
+    });
+  });
+}
+
+async function loadVoices() {
+  const res = await fetch("/api/tts-voices");
+  currentConfig = await res.json();
+  buildLangRows(currentConfig);
+}
+
+function collectVoicesPayload() {
+  const payload = {};
+  document.querySelectorAll(".lang-row").forEach((row) => {
+    const lang = row.dataset.lang;
+    const engine = row.querySelector(".engineSelect").value;
+    const voice = getEffectiveVoice(row);
+    payload[lang] = { engine, voice: engine === "gemini" ? voice : null };
+  });
+  return payload;
+}
+
+async function saveVoices() {
+  const res = await fetch("/api/tts-voices", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(collectVoicesPayload()),
+  });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  await refreshProductionConfig();
+}
+
+document.getElementById("saveVoicesBtn").addEventListener("click", async () => {
+  const status = document.getElementById("voicesStatus");
+  status.textContent = "Salvo...";
+  try {
+    await saveVoices();
+    status.textContent = "✓ Salvato in locale — ricordati di premere \"Rilascia\" per pubblicarlo in produzione.";
+  } catch (e) {
+    status.textContent = "Errore: " + e.message;
+  }
+});
+
+document.getElementById("releaseLocalBtn").addEventListener("click", async () => {
+  const status = document.getElementById("voicesStatus");
+  status.textContent = "Salvo e apro il gioco in locale...";
+  try {
+    await saveVoices();
+    status.textContent = "✓ Salvato. Assicurati che il backend di sviluppo (porta 8000) sia avviato, poi ascolta nella tab appena aperta.";
+    window.open("/game/index.html", "_blank");
+  } catch (e) {
+    status.textContent = "Errore: " + e.message;
+  }
+});
+
+let lastEntries = [];
+
+async function refreshGitStatus() {
+  const branchLabel = document.getElementById("branchLabel");
+  const fileListEl = document.getElementById("fileList");
+  branchLabel.textContent = "Carico...";
+  const res = await fetch("/api/git-status");
+  const data = await res.json();
+  branchLabel.textContent = "branch: " + data.branch;
+  lastEntries = data.entries;
+  if (data.entries.length === 0) {
+    fileListEl.innerHTML = "<em style='color:#0c3b5e66'>Nessuna modifica in sospeso.</em>";
+    document.getElementById("releaseBtn").disabled = true;
+    return;
+  }
+  fileListEl.innerHTML = data.entries
+    .map((e, i) => `
+      <label class="file-row">
+        <input type="checkbox" data-idx="${i}" ${e.untracked ? "" : "checked"} />
+        <span class="tag ${e.untracked ? "untracked" : ""}">${e.untracked ? "nuovo" : e.status}</span>
+        <span>${e.path}</span>
+      </label>
+    `)
+    .join("");
+  document.getElementById("releaseBtn").disabled = false;
+}
+
+document.getElementById("refreshStatusBtn").addEventListener("click", refreshGitStatus);
+
+document.getElementById("releaseBtn").addEventListener("click", async () => {
+  const checked = Array.from(document.querySelectorAll("#fileList input[type=checkbox]:checked"))
+    .map((cb) => lastEntries[Number(cb.dataset.idx)].path);
+  if (checked.length === 0) {
+    alert("Nessun file selezionato.");
+    return;
+  }
+  const message = document.getElementById("commitMessage").value.trim() || "Aggiornamenti da consolle admin";
+  const confirmed = confirm(`Stai per pubblicare ${checked.length} file con il messaggio:\n\n"${message}"\n\nContinuare?`);
+  if (!confirmed) return;
+
+  const status = document.getElementById("releaseStatus");
+  const output = document.getElementById("releaseOutput");
+  const btn = document.getElementById("releaseBtn");
+  btn.disabled = true;
+  status.textContent = "Pubblico...";
+  output.style.display = "none";
+  try {
+    const res = await fetch("/api/release", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, files: checked }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || ("HTTP " + res.status));
+    status.textContent = "✓ Pubblicato su main.";
+    output.style.display = "block";
+    output.textContent = (data.commit_output || "") + "\n" + (data.push_output || "");
+    document.getElementById("commitMessage").value = "";
+    refreshGitStatus();
+  } catch (e) {
+    status.textContent = "Errore: " + e.message;
+    output.style.display = "block";
+    output.textContent = String(e.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+loadVoices().then(refreshProductionConfig);
+refreshGitStatus();
+</script>
+</body>
+</html>

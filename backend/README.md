@@ -22,6 +22,8 @@ cp .env.example .env
 
 `.env` è nel `.gitignore`: non finisce mai nel repo.
 
+**Opzionale** — notifiche errori via [Sentry](https://sentry.io): aggiungi `SENTRY_DSN=...` allo stesso `.env`. Se assente, Sentry resta semplicemente disattivato (nessuna chiamata di rete). Gli eventi sono etichettati `environment=production` su Render, `development` altrove (variabile `RENDER`, impostata automaticamente da Render).
+
 ## Avvio
 
 ```bash

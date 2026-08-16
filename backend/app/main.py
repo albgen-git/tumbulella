@@ -5,12 +5,28 @@ viene mandato dal frontend a ogni chiamata, come da architettura scelta in
 requirements.md per non introdurre persistenza nell'MVP.
 """
 
+import os
+
+import sentry_sdk
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from google.genai import errors as genai_errors
 
-load_dotenv()  # legge backend/.env se presente, prima di leggere GEMINI_API_KEY
+load_dotenv()  # legge backend/.env se presente, prima di leggere GEMINI_API_KEY/SENTRY_DSN
+
+# Notifiche errori via Sentry — opzionale: se SENTRY_DSN non è impostata (es.
+# in sviluppo locale senza .env configurato per questo), resta disattivato,
+# nessuna chiamata di rete. "RENDER" è impostata automaticamente da Render
+# su ogni servizio, usata solo per etichettare l'ambiente (produzione vs
+# sviluppo locale) nel pannello Sentry, non per abilitarlo/disabilitarlo.
+_sentry_dsn = os.getenv("SENTRY_DSN")
+if _sentry_dsn:
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        environment="production" if os.getenv("RENDER") else "development",
+        send_default_pii=True,
+    )
 
 from app import frasi_iniziali, prompts, smorfia, tts
 from app.llm_client import LLMNotConfiguredError, generate_narration, is_configured
