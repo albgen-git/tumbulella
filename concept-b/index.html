@@ -39,9 +39,9 @@
 </script>
 <!-- Google AdSense: script di verifica/auto-ads. L'ID cliente è pubblico
      per design (compare nell'HTML di ogni sito con AdSense), non è un
-     segreto. L'AdBanner placeholder più sotto va sostituito con un vero
-     <ins class="adsbygoogle"> quando avremo lo slot dell'unità pubblicitaria.
-     Caricato solo su http/https, MAI su file:// — aperto in locale
+     segreto. Da affiancare a un vero <ins class="adsbygoogle"> quando
+     avremo lo slot dell'unità pubblicitaria (il placeholder di esempio è
+     stato rimosso). Caricato solo su http/https, MAI su file:// — aperto in locale
      (doppio click sul file) il tag <script> statico verso un dominio
      pubblicitario reale blocca il caricamento dell'intera pagina (pagina
      bianca): probabilmente Chrome resta in attesa indefinita della risposta
@@ -423,26 +423,6 @@ function StoryPanel({ fragments, phase, currentCall, language }) {
   );
 }
 
-// Placeholder banner pubblicitario — spazio riservato per Google AdSense,
-// in attesa che l'account venga approvato. Nessuno script esterno, nessun
-// tracciamento: solo un'immagine campione (SVG inline). Da sostituire con
-// lo snippet reale AdSense quando disponibile — vedi commento sotto.
-function AdBanner() {
-  return (
-    <div className="lg:col-span-5 rounded-xl2 border-2 border-dashed border-white/40 bg-white/10 backdrop-blur flex items-center justify-center gap-3 py-3 px-4">
-      {/* Immagine campione: da rimuovere insieme a questo intero componente quando si integra il vero snippet AdSense. */}
-      <svg viewBox="0 0 120 40" className="w-16 sm:w-20 h-auto shrink-0" xmlns="http://www.w3.org/2000/svg">
-        <rect x="1" y="1" width="118" height="38" rx="4" fill="none" stroke="#ffffff" strokeWidth="2" strokeDasharray="4 3" opacity="0.7" />
-        <circle cx="20" cy="20" r="7" fill="#ffffff" opacity="0.55" />
-        <path d="M34 28 L48 15 L60 24 L76 11 L100 28 Z" fill="#ffffff" opacity="0.4" />
-      </svg>
-      <span className="text-white/80 text-xs sm:text-sm font-bold tracking-wide text-center">
-        Spazio pubblicitario — banner di esempio
-      </span>
-    </div>
-  );
-}
-
 function App() {
   const [language, setLanguage] = useState("it");
   const [extractedOrder, setExtractedOrder] = useState([]);
@@ -458,10 +438,18 @@ function App() {
   const processingRef = useRef(false);
   const sessionRef = useRef(0); // incrementato a ogni "nuova storia": invalida le sequenze in corso
   const languageRef = useRef(language);
-  const mutedRef = useRef(muted);
+  const mutedRef = useRef(muted); // aggiornato in modo sincrono nell'unico punto che lo cambia (bottone muto), non via useEffect — stesso motivo di languageRef sotto
 
-  useEffect(() => { languageRef.current = language; }, [language]);
-  useEffect(() => { mutedRef.current = muted; }, [muted]);
+  // Aggiorna languageRef SUBITO, non tramite useEffect: se il cambio lingua
+  // e il click sul primo numero avvengono a ridosso l'uno dell'altro,
+  // l'effetto potrebbe non aver ancora girato quando playSequence legge
+  // languageRef.current, leggendo la lingua precedente (bug osservato: primo
+  // numero recitato nella lingua selezionata in precedenza, non in quella
+  // appena scelta).
+  function handleLanguageChange(newLang) {
+    languageRef.current = newLang;
+    setLanguage(newLang);
+  }
 
   const extractedSet = new Set(extractedOrder);
 
@@ -487,22 +475,6 @@ function App() {
     const previousNumbers = orderRef.current.slice(0, item.clickIndex);
     const isFirstTurn = previousNumbers.length === 0;
 
-    // Al primo numero della partita, PRIMA di ogni altra cosa: si avvia
-    // subito la fetch della narrazione (il backend su Render potrebbe
-    // essere in sleep e metterci fino a un minuto a risvegliarsi — più
-    // presto parte, più tempo ha) e si legge il filler in locale (Web
-    // Speech, mai Gemini). Ordine voluto: filler -> chiamata -> narrazione,
-    // non chiamata -> filler, che suonava come una sequenza scucita.
-    let narrationPromise = null;
-    if (isFirstTurn) {
-      narrationPromise = window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
-      narrationPromise.catch(() => {}); // evita un warning di "unhandled rejection" nel frattempo: l'errore vero resta gestito sotto, nel try/catch
-      if (!mutedRef.current) {
-        await window.speakWebSpeech(window.COLD_START_FILLER[lang] || window.COLD_START_FILLER.nap, lang, false);
-        if (sessionRef.current !== session) return;
-      }
-    }
-
     setPhase("calling");
     const callText = window.buildCall(item.n, lang);
     setCurrentCall(callText);
@@ -513,12 +485,9 @@ function App() {
 
     setPhase("narrando");
     const prefix = window.buildPrefix(item.n, lang);
-    if (!narrationPromise) {
-      narrationPromise = window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
-    }
     let narration;
     try {
-      narration = await narrationPromise;
+      narration = await window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
     } catch (err) {
       if (sessionRef.current !== session) return;
       const errText =
@@ -640,10 +609,11 @@ function App() {
             >
               ❓
             </button>
-            <LanguageSelector language={language} setLanguage={setLanguage} disabled={extractedOrder.length > 0} />
+            <LanguageSelector language={language} setLanguage={handleLanguageChange} disabled={extractedOrder.length > 0} />
             <button
               onClick={() => {
                 const next = !muted;
+                mutedRef.current = next; // sincrono, stesso motivo di handleLanguageChange
                 setMuted(next);
                 if (next) window.stopSpeaking();
               }}
@@ -682,7 +652,6 @@ function App() {
           <div className="lg:col-span-3">
             <Board extractedSet={extractedSet} extractedOrder={extractedOrder} onCellClick={handleCellClick} />
           </div>
-          <AdBanner />
           <div className="lg:col-span-2">
             <StoryPanel
               fragments={fragments}

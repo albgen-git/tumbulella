@@ -27,7 +27,8 @@ class NarrateResponse(BaseModel):
 
 
 class TTSRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=500, description="Testo da leggere in napoletano (fase 1 o fase 2)")
+    text: str = Field(..., min_length=1, max_length=500, description="Testo da leggere (fase 1 o fase 2)")
+    language: Language = "nap"
 
 
 class SmorfiaEntry(BaseModel):

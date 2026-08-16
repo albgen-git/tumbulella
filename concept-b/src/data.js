@@ -295,20 +295,6 @@ window.pickRandomExclamation = function (lang) {
 };
 
 // ---------------------------------------------------------------------------
-// Frase "riempitivo" al primo numero della partita, letta SEMPRE via Web
-// Speech locale (mai Gemini) e in parallelo alla prima chiamata al backend
-// (vedi playSequence in index.html): il backend su Render va in sleep dopo
-// un po' di inattività e la prima richiesta può metterci fino a ~1 minuto a
-// risvegliarlo. Senza questa frase, quel minuto sarebbe silenzio morto.
-// ---------------------------------------------------------------------------
-window.COLD_START_FILLER = {
-  nap: "Jamme, sistemate 'e cartelle ca accumminciammo!",
-  it: "Iniziate a sistemare le cartelle, si comincia!",
-  en: "Start setting up your cards, here we go!",
-  es: "Empezad a preparar los cartones, ya arrancamos!",
-};
-
-// ---------------------------------------------------------------------------
 // TTS reale via Web Speech API del browser (gratuita, nessuna chiamata
 // server) — come da requisiti per l'MVP: napoletano usa la voce italiana più
 // vicina disponibile (nessun browser ha una voce dialettale nativa, quindi
@@ -406,15 +392,22 @@ function pickVoice(voices, bcp47) {
   return sameLang.length ? sameLang[0] : null;
 }
 
-// TTS reale in napoletano via Gemini (voce "Puck", backend /api/tts) — vedi
-// requirements.md. Ritorna true se riprodotto con successo; false se il
-// backend non risponde/da errore, così window.speak ricade su Web Speech
-// (mai un turno silenzioso solo perché il servizio a pagamento è giù).
-function speakNapoletanoTTS(text) {
+// Quali lingue hanno Gemini TTS abilitato — impostato subito sotto, dopo la
+// definizione di window.BACKEND_URL (di default solo il napoletano finché
+// non arriva la risposta reale, così il comportamento resta quello di
+// sempre se la fetch è ancora in volo al primo turno).
+window.__ttsEnabledLanguages = { nap: true, it: false, en: false, es: false };
+
+// TTS reale via Gemini (voce configurata per lingua lato backend, vedi
+// tts_voices.json) — vedi requirements.md. Ritorna true se riprodotto con
+// successo; false se il backend non risponde/da errore (lingua disabilitata
+// compresa), così window.speak ricade su Web Speech (mai un turno silenzioso
+// solo perché il servizio a pagamento è giù o non è attivo per quella lingua).
+function speakGeminiTTS(text, lang) {
   return fetch(window.BACKEND_URL + "/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: text }),
+    body: JSON.stringify({ text: text, language: lang }),
   })
     .then(function (res) {
       if (!res.ok) throw new Error("HTTP " + res.status);
@@ -446,14 +439,16 @@ function speakNapoletanoTTS(text) {
 // Legge `text` ad alta voce nella lingua `lang`. Risolve la Promise (con
 // `true`) quando la lettura finisce; risolve subito con `false` se la TTS
 // non è disponibile o è mutata, così il chiamante sa se deve ricadere sulla
-// pausa fissa in window.TIMING. Per il napoletano prova prima il TTS reale
-// (Gemini, voce "Puck"); se fallisce, ricade su Web Speech come le altre lingue.
+// pausa fissa in window.TIMING. Se la lingua ha Gemini TTS abilitato (vedi
+// window.__ttsEnabledLanguages / tts_voices.json, configurabile dalla
+// consolle admin) prova prima quello; se fallisce o è disabilitato, ricade
+// su Web Speech.
 window.speak = function (text, lang, muted) {
   if (muted) return Promise.resolve(false);
-  if (lang === "nap") {
-    return speakNapoletanoTTS(text).then(function (ok) {
+  if (window.__ttsEnabledLanguages && window.__ttsEnabledLanguages[lang]) {
+    return speakGeminiTTS(text, lang).then(function (ok) {
       if (ok) {
-        window.__lastVoiceUsed = "Gemini TTS (Puck)";
+        window.__lastVoiceUsed = "Gemini TTS";
         return true;
       }
       return speakWebSpeech(text, lang, muted);
@@ -529,7 +524,6 @@ function speakWebSpeech(text, lang, muted) {
     }, 30);
   });
 };
-window.speakWebSpeech = speakWebSpeech; // esposta per il filler audio d'avvio (index.html), che deve restare gratuito/locale anche per il napoletano
 
 window.stopSpeaking = function () {
   if (window.speechSynthesis) window.speechSynthesis.cancel();
@@ -568,6 +562,23 @@ window.BACKEND_URL = (function () {
   }
   return "https://tumbulella.onrender.com";
 })();
+
+// Aggiorna window.__ttsEnabledLanguages con la config reale non appena
+// disponibile (di default solo il napoletano, vedi sopra la sua prima
+// dichiarazione) — se fallisce resta quel default, comportamento invariato.
+fetch(window.BACKEND_URL + "/api/tts-config")
+  .then(function (res) { return res.ok ? res.json() : null; })
+  .then(function (config) {
+    // Risposta: {lingua: {enabled, voice}} — qui serve solo "enabled"
+    // (il nome della voce lo usa solo la consolle admin, non il gioco).
+    if (!config) return;
+    var enabled = {};
+    Object.keys(config).forEach(function (lang) {
+      enabled[lang] = !!(config[lang] && config[lang].enabled);
+    });
+    window.__ttsEnabledLanguages = enabled;
+  })
+  .catch(function () {});
 
 // Due errori ben distinti: il backend non risponde affatto (server spento,
 // rete giù) vs il backend risponde ma segnala un problema suo (es. quota LLM
@@ -752,7 +763,7 @@ window.ABOUT_CONTENT = {
     tagline: "The Neapolitan tombola, told through an ancient tradition, in a modern key.",
     downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Download printable cards (PDF)" },
     donation: {
-      text: "Se questo gioco ti piace e ci giochi spesso, offrimi un piccolo contributo per sostenere Tumbulella: l'audio e l'intelligenza artificiale che generano la storia hanno un costo ad ogni numero estratto.",
+      text: "If you enjoy this game and play it often, consider a small contribution to support Tumbulella: the audio and the AI that generate the story have a cost every time a number is drawn.",
       linkText: "👉 paypal.me/AlbertoGenovese859",
       url: "https://paypal.me/AlbertoGenovese859",
     },
@@ -799,7 +810,7 @@ window.ABOUT_CONTENT = {
     tagline: "El bingo napolitano contado por una antigua tradición, en clave moderna.",
     downloadLink: { href: "Cartelle%20Tumbullella%20da%20stampare.pdf", text: "📄 Descargar los cartones para imprimir (PDF)" },
     donation: {
-      text: "Se questo gioco ti piace e ci giochi spesso, offrimi un piccolo contributo per sostenere Tumbulella: l'audio e l'intelligenza artificiale che generano la storia hanno un costo ad ogni numero estratto.",
+      text: "Si te gusta este juego y jugáis a menudo, ofrecedme una pequeña contribución para sostener Tumbulella: el audio y la inteligencia artificial que generan la historia tienen un coste cada vez que sale un número.",
       linkText: "👉 paypal.me/AlbertoGenovese859",
       url: "https://paypal.me/AlbertoGenovese859",
     },

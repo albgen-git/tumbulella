@@ -106,14 +106,29 @@ def narrate(req: NarrateRequest) -> NarrateResponse:
     return NarrateResponse(number=req.number, call=call, narration=narration)
 
 
+@app.get("/api/tts-config")
+def tts_config() -> dict[str, dict]:
+    """{lingua: {enabled, voice}} — il frontend di gioco consulta solo
+    "enabled" per decidere se vale la pena provare Gemini prima di Web
+    Speech; la consolle admin locale usa anche "voice" per mostrare quale
+    voce è live in produzione."""
+    return tts.public_config()
+
+
 @app.post("/api/tts")
 def text_to_speech(req: TTSRequest) -> Response:
-    """TTS reale in napoletano (voce "Puck") — le altre 3 lingue restano su
-    Web Speech lato client, non passano da qui. Vedi app/tts.py."""
+    """TTS reale via Gemini per le lingue abilitate in tts_voices.json (voce
+    configurabile dalla consolle admin locale) — le altre restano su Web
+    Speech lato client, non passano da qui. Vedi app/tts.py."""
     try:
-        audio_wav = tts.generate_speech(req.text)
+        audio_wav = tts.generate_speech(req.text, req.language)
     except tts.TTSNotConfiguredError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
+    except tts.LanguageNotEnabledError as e:
+        # Non e' un errore transitorio: la lingua e' semplicemente su
+        # Web Speech in config. 404 immediato, niente retry, cosi' il
+        # frontend passa a Web Speech senza aspettare inutilmente.
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except genai_errors.ServerError as e:
         raise HTTPException(
             status_code=503, detail="il servizio audio è momentaneamente sovraccarico, riprova tra qualche secondo"

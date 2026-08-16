@@ -30,6 +30,16 @@ cp .env.example .env
 
 Poi apri http://127.0.0.1:8000/docs per la documentazione interattiva (Swagger UI), generata automaticamente da FastAPI.
 
+## Consolle admin (solo locale)
+
+Piccola app separata (`admin/`), **mai deployata** — gira solo sul PC di sviluppo, bind a `127.0.0.1`. Serve a scegliere motore/voce TTS per lingua (`tts_voices.json`) con test audio, e a pubblicare (`git add` + `commit` + `push`) con anteprima dei file coinvolti prima di confermare.
+
+```bash
+./venv/Scripts/python.exe -m admin.main
+```
+
+Poi apri http://127.0.0.1:8899.
+
 ## Endpoint
 
 - `GET /api/health` — stato del servizio, e se la chiave Gemini è configurata (non richiede chiave).
@@ -76,7 +86,5 @@ Al primo numero (`previous_sentences` vuoto), `narration` è invece una riga pes
 
 ## Cosa manca per la produzione (fuori scope di questo MVP)
 
-- Collegamento del frontend (`concept-b`) a questa API al posto del motore mock in `src/data.js` — prossimo passo naturale.
-- TTS lato server (per ora il frontend usa solo la Web Speech API del browser).
 - Rate limiting / autenticazione, se il traffico cresce.
 - CORS ristretto al dominio reale (`www.tumbulella.it`) invece di `allow_origins=["*"]`.
