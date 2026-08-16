@@ -1,0 +1,19 @@
+{
+  "_comment": "Config del motore TTS per lingua, modificabile dalla consolle admin locale (admin/). engine: 'gemini' (a pagamento, voce scelta qui sotto) o 'webspeech' (gratis, gestito lato browser). Committata e pubblicata come parte di un rilascio normale.",
+  "nap": {
+    "engine": "gemini",
+    "voice": "Puck"
+  },
+  "it": {
+    "engine": "webspeech",
+    "voice": null
+  },
+  "en": {
+    "engine": "webspeech",
+    "voice": null
+  },
+  "es": {
+    "engine": "webspeech",
+    "voice": null
+  }
+}
