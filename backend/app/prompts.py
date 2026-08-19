@@ -119,10 +119,16 @@ def bold_smorfia_words(text: str, numbers: list[int], language: str) -> str:
         # richiedere l'apostrofo evita di "mangiare" per sbaglio l'ultima
         # lettera di articoli non elisi come "la"/"lo" (es. "la mamma" deve
         # restare "la **mamma**", non "l**a mamma**").
-        # \b prima e dopo il "nucleo": senza, una parola corta come "Re" (numero
-        # 15) matcha come sottostringa dentro qualunque parola che la contiene,
-        # es. "rimette**re**" o "dec**re**tare" — bug osservato in produzione.
-        pattern = re.compile(r"((?:['ʼ][aeo]\s+)?\b" + _accent_tolerant(core) + r"\b)", re.IGNORECASE)
+        # Confini di parola prima e dopo il "nucleo": senza, una parola corta
+        # come "Re" (numero 15) matcha come sottostringa dentro qualunque
+        # parola che la contiene, es. "rimette**re**" o "dec**re**tare" (bug
+        # osservato in produzione). Si usano lookaround (?<!\w)/(?!\w) invece
+        # di \b: \b richiede che il carattere adiacente sia di parola, e fallisce
+        # per i nuclei che iniziano loro stessi con un apostrofo elisivo (es.
+        # "'mbriaco" n.14, "'rotta" n.74) — con \b quelle parole non venivano
+        # mai grassettate, nemmeno quando il modello le scriveva esattamente
+        # come in smorfia.json (bug introdotto dalla correzione precedente).
+        pattern = re.compile(r"(?<!\w)((?:['ʼ][aeo]\s+)?" + _accent_tolerant(core) + r")(?!\w)", re.IGNORECASE)
         text = pattern.sub(r"**\1**", text, count=0)
     return text
 

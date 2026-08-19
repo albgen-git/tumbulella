@@ -18,6 +18,14 @@ class NarrateRequest(BaseModel):
         description="Numeri già usciti in questa partita, in ordine — NON mandato all'LLM, usato solo lato backend per grassettare in modo deterministico le parole Smorfia realmente uscite nel testo generato.",
     )
     language: Language = "nap"
+    device_id: str | None = Field(
+        default=None,
+        description="ID anonimo persistente per dispositivo (localStorage lato frontend) — solo per il cruscotto d'uso della consolle admin, mai per identificare una persona reale.",
+    )
+    session_id: str | None = Field(
+        default=None,
+        description="ID della partita corrente (rigenerato ad ogni 'Nuova storia') — usato lato backend solo per calcolare la durata delle partite nel cruscotto admin.",
+    )
 
 
 class NarrateResponse(BaseModel):
@@ -29,6 +37,15 @@ class NarrateResponse(BaseModel):
 class TTSRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=500, description="Testo da leggere (fase 1 o fase 2)")
     language: Language = "nap"
+
+
+class EventRequest(BaseModel):
+    """Eventi minori che non passano da /api/narrate — per ora solo la
+    pressione del tasto "!", pensato per essere riusabile per altri eventi
+    futuri del cruscotto admin senza aggiungere un endpoint per ciascuno."""
+
+    event_type: Literal["exclamation"]
+    session_id: str | None = None
 
 
 class SmorfiaEntry(BaseModel):

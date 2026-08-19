@@ -28,15 +28,29 @@ if _sentry_dsn:
         send_default_pii=True,
     )
 
-from app import frasi_iniziali, prompts, smorfia, tts
+from app import feature_flags, frasi_iniziali, prompts, smorfia, stats, tts
 from app.llm_client import LLMNotConfiguredError, generate_narration, is_configured
-from app.models import HealthResponse, NarrateRequest, NarrateResponse, SmorfiaEntry, TTSRequest
+from app.models import EventRequest, HealthResponse, NarrateRequest, NarrateResponse, SmorfiaEntry, TTSRequest
 
 app = FastAPI(
     title="Tumbulella API",
     description="Decodifica Smorfia + narrazione incrementale per Tumbulella (MVP, mock LLM escluso: qui è reale).",
     version="0.1.0",
 )
+
+
+@app.on_event("startup")
+def _startup() -> None:
+    stats.start()  # no-op se GITHUB_STATS_TOKEN/GITHUB_STATS_GIST_ID non sono impostate
+
+
+@app.on_event("shutdown")
+def _shutdown() -> None:
+    # Salva subito i contatori non ancora scritti sul Gist — Render manda
+    # questo segnale sia per un nuovo deploy sia per lo sleep del piano
+    # gratuito dopo inattività: senza questo, gli ultimi minuti di dati
+    # andrebbero persi (bug osservato in produzione, vedi app/stats.py).
+    stats.flush_now()
 
 # MVP: nessun frontend è ancora servito da un dominio proprio (si apre via
 # file:// o da un server di sviluppo locale), quindi si accettano tutte le
@@ -92,9 +106,12 @@ def narrate(req: NarrateRequest) -> NarrateResponse:
     meaning = entry["napoletano"] if req.language == "nap" else entry["italiano"]
     call = f"{req.number}, {meaning}"
 
+    is_first_turn = not req.previous_sentences
+    stats.record_number_called(req.device_id, req.session_id, req.language, is_first_turn)
+
     # Fase 2 — narrazione. Primo numero della partita: nessuna chiamata LLM,
     # si pesca una frase statica da frasi-iniziali-{lingua}.txt (istantaneo, gratis).
-    if not req.previous_sentences:
+    if is_first_turn:
         narration = frasi_iniziali.random_frase_iniziale(req.language)
         return NarrateResponse(number=req.number, call=call, narration=narration)
 
@@ -120,6 +137,25 @@ def narrate(req: NarrateRequest) -> NarrateResponse:
     narration = prompts.bold_smorfia_words(narration, req.previous_numbers + [req.number], req.language)
 
     return NarrateResponse(number=req.number, call=call, narration=narration)
+
+
+@app.post("/api/event")
+def track_event(req: EventRequest) -> dict:
+    """Eventi minori per il cruscotto admin che non passano da /api/narrate
+    — per ora solo la pressione del tasto "!". Nessuna risposta significativa
+    attesa dal frontend: chiamata "fire and forget", non deve mai bloccare
+    o rallentare il gioco."""
+    if req.event_type == "exclamation":
+        stats.record_exclamation(req.session_id)
+    return {"ok": True}
+
+
+@app.get("/api/feature-flags")
+def feature_flags_config() -> dict:
+    """Flag attivabili dalla consolle admin locale (feature_flags.json) — per
+    ora solo l'abilitazione del pulsante "!" lato frontend, vedi
+    app/feature_flags.py."""
+    return feature_flags.public_config()
 
 
 @app.get("/api/tts-config")

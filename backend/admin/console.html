@@ -9,8 +9,8 @@
   * { box-sizing: border-box; }
   body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--napoli-50); color: #0c3b5e; margin: 0; padding: 24px; }
   h1 { color: var(--napoli-800); font-size: 22px; margin: 0 0 4px; }
-  .subtitle { color: #0c3b5e99; font-size: 13px; margin-bottom: 24px; }
-  .card { background: white; border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(12,59,94,0.12); max-width: 760px; }
+  .subtitle { color: #0c3b5e99; font-size: 13px; margin-bottom: 20px; }
+  .card { background: white; border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(12,59,94,0.12); max-width: 860px; }
   h2 { font-size: 16px; color: var(--napoli-800); margin: 0 0 14px; }
   .lang-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--napoli-50); flex-wrap: wrap; }
   .lang-row:last-child { border-bottom: none; }
@@ -34,45 +34,130 @@
   .file-row .tag { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: var(--napoli-100); color: var(--napoli-700); }
   .file-row .tag.untracked { background: #fff3cd; color: #7a5c00; }
   textarea { width: 100%; min-height: 60px; border-radius: 8px; border: 1px solid #cce; padding: 8px; font-family: inherit; font-size: 13px; }
-  .actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
   .output { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px; background: #0c3b5e0d; border-radius: 8px; padding: 10px; margin-top: 10px; max-height: 200px; overflow-y: auto; }
-  .warn { background: #fff3cd; color: #7a5c00; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 20px; max-width: 760px; }
+  .warn { background: #fff3cd; color: #7a5c00; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 20px; max-width: 860px; }
+  .info { background: var(--napoli-50); color: var(--napoli-800); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; max-width: 860px; }
+  .tab-btn { background: white; color: var(--napoli-700); box-shadow: 0 1px 2px rgba(12,59,94,0.1); }
+  .tab-btn.active { background: var(--napoli-800); color: white; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpi-tile { background: var(--napoli-50); border-radius: 10px; padding: 12px 14px; }
+  .kpi-tile .value { font-size: 22px; font-weight: 800; color: var(--napoli-800); line-height: 1.2; }
+  .kpi-tile .label { font-size: 11px; color: #0c3b5e99; margin-top: 2px; }
+
+  .lang-bars { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .lang-bar-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .lang-bar-row .lang-tag { width: 34px; font-weight: 700; flex-shrink: 0; }
+  .lang-bar-track { flex: 1; background: var(--napoli-50); border-radius: 6px; height: 14px; overflow: hidden; }
+  .lang-bar-fill { background: var(--napoli-500); height: 100%; border-radius: 6px; }
+  .lang-bar-count { width: 46px; text-align: right; color: #0c3b5e99; flex-shrink: 0; }
+
+  table.stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.stats-table th, table.stats-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--napoli-50); }
+  table.stats-table th { color: var(--napoli-700); font-weight: 700; }
+
+  .granularity-btn { background: white; color: var(--napoli-700); box-shadow: 0 1px 2px rgba(12,59,94,0.1); }
+  .granularity-btn.active { background: var(--napoli-600); color: white; }
+
+  .deploy-row { font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--napoli-50); }
 </style>
 </head>
 <body>
 <h1>🎛️ Consolle Admin — Tumbulella</h1>
 <p class="subtitle">Solo locale — gira su questo PC, non fa parte del sito pubblico.</p>
 
-<div class="warn">⚠️ Attivare Gemini TTS su una lingua ha un costo reale (~0,005€ a turno) e non è più coperto dal margine del piano premium napoletano, pensato solo per il napoletano. Valutalo prima di attivarlo su italiano/inglese/spagnolo.</div>
+<div class="tabs">
+  <button class="tab-btn active" data-tab="voci">🎙️ Voci TTS</button>
+  <button class="tab-btn" data-tab="rilascio">🚀 Rilascio</button>
+  <button class="tab-btn" data-tab="dashboard">📊 Dashboard</button>
+</div>
 
-<div class="card">
-  <h2>Voci TTS per lingua</h2>
-  <div id="langRows"></div>
-  <div class="actions">
-    <button class="btn-primary" id="saveVoicesBtn">Salva configurazione</button>
-    <span class="status" id="voicesStatus"></span>
+<div class="tab-panel" data-panel="voci">
+  <div class="warn">⚠️ Attivare Gemini TTS su una lingua ha un costo reale (~0,005€ a turno) e non è più coperto dal margine del piano premium napoletano, pensato solo per il napoletano. Valutalo prima di attivarlo su italiano/inglese/spagnolo.</div>
+
+  <div class="card">
+    <h2>Voci TTS per lingua</h2>
+    <div id="langRows"></div>
+    <div class="actions">
+      <button class="btn-primary" id="saveVoicesBtn">Salva configurazione</button>
+      <span class="status" id="voicesStatus"></span>
+    </div>
   </div>
 </div>
 
-<div class="card">
-  <h2>Rilascio in produzione</h2>
-  <div class="actions">
-    <button class="btn-secondary" id="releaseLocalBtn" title="Salva la config voci e apre il gioco in locale (backend :8000) per testare, es. su Edge, prima di pubblicare">🧪 Rilascia localmente</button>
-    <span class="status" id="voicesStatus"></span>
+<div class="tab-panel" data-panel="rilascio" style="display:none">
+  <div class="card">
+    <h2>Funzionalità</h2>
+    <div class="lang-row">
+      <label style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer;">
+        <input type="checkbox" id="exclamationFlagCheckbox" style="width:18px;height:18px;" />
+        Pulsante "!" (esortazione) attivo nel gioco
+      </label>
+      <span class="prod-badge" id="exclamationProdBadge">🔵 produzione: verifico...</span>
+    </div>
+    <p style="font-size:12px; color:#0c3b5e88; margin: 4px 0 14px;">Da spegnere se in produzione il tasto "!" risultasse troppo usato: salva qui, poi pubblica dalla sezione qui sotto.</p>
+    <div class="actions">
+      <button class="btn-primary" id="saveFlagsBtn">Salva</button>
+      <span class="status" id="flagsStatus"></span>
+    </div>
   </div>
-  <p style="font-size:12px; color:#0c3b5e88; margin: 4px 0 14px;">"Rilascia localmente" apre il gioco puntato sul backend di sviluppo (127.0.0.1:8000, deve essere già avviato a parte) — non tocca la produzione. Usalo per testare le voci prima di premere "Rilascia" qui sotto.</p>
-  <div class="actions">
-    <button class="btn-secondary" id="refreshStatusBtn">Aggiorna stato repo</button>
-    <span class="status" id="branchLabel"></span>
+
+  <div class="card">
+    <h2>Rilascio in produzione</h2>
+    <div class="actions">
+      <button class="btn-secondary" id="releaseLocalBtn" title="Salva la config voci e apre il gioco in locale (backend :8000) per testare, es. su Edge, prima di pubblicare">🧪 Rilascia localmente</button>
+      <span class="status" id="releaseLocalStatus"></span>
+    </div>
+    <p style="font-size:12px; color:#0c3b5e88; margin: 4px 0 14px;">"Rilascia localmente" apre il gioco puntato sul backend di sviluppo (127.0.0.1:8000, deve essere già avviato a parte) — non tocca la produzione. Usalo per testare le voci prima di premere "Rilascia" qui sotto.</p>
+    <div class="actions">
+      <button class="btn-secondary" id="refreshStatusBtn">Aggiorna stato repo</button>
+      <span class="status" id="branchLabel"></span>
+    </div>
+    <div class="file-list" id="fileList"><em style="color:#0c3b5e66">Premi "Aggiorna stato repo" per vedere le modifiche in sospeso.</em></div>
+    <label style="font-size:13px; font-weight:600; display:block; margin-top:10px;">Messaggio di commit</label>
+    <textarea id="commitMessage" placeholder="Descrivi cosa stai pubblicando..."></textarea>
+    <div class="actions">
+      <button class="btn-danger" id="releaseBtn" disabled>🚀 Rilascia</button>
+      <span class="status" id="releaseStatus"></span>
+    </div>
+    <div class="output" id="releaseOutput" style="display:none"></div>
   </div>
-  <div class="file-list" id="fileList"><em style="color:#0c3b5e66">Premi "Aggiorna stato repo" per vedere le modifiche in sospeso.</em></div>
-  <label style="font-size:13px; font-weight:600; display:block; margin-top:10px;">Messaggio di commit</label>
-  <textarea id="commitMessage" placeholder="Descrivi cosa stai pubblicando..."></textarea>
-  <div class="actions">
-    <button class="btn-danger" id="releaseBtn" disabled>🚀 Rilascia</button>
-    <span class="status" id="releaseStatus"></span>
+</div>
+
+<div class="tab-panel" data-panel="dashboard" style="display:none">
+  <div class="card">
+    <h2>Uso dell'applicazione</h2>
+    <div class="actions" style="margin-top:0; margin-bottom:16px;">
+      <button class="granularity-btn active" data-granularity="day">Giorno</button>
+      <button class="granularity-btn" data-granularity="week">Settimana</button>
+      <button class="granularity-btn" data-granularity="month">Mese</button>
+      <button class="granularity-btn" data-granularity="year">Anno</button>
+      <span class="status" id="dashboardStatus"></span>
+    </div>
+    <div id="dashboardUnavailable" style="display:none" class="info"></div>
+    <div id="dashboardContent" style="display:none">
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <h2 style="font-size:14px;">Lingue usate nel periodo mostrato</h2>
+      <div class="lang-bars" id="langBars"></div>
+      <h2 style="font-size:14px;">Andamento</h2>
+      <div style="overflow-x:auto;">
+        <table class="stats-table" id="statsTable"></table>
+      </div>
+    </div>
   </div>
-  <div class="output" id="releaseOutput" style="display:none"></div>
+
+  <div class="card">
+    <h2>Salute Render</h2>
+    <div id="renderUnavailable" style="display:none" class="info"></div>
+    <div id="renderContent" style="display:none">
+      <div class="kpi-grid" id="renderKpiGrid"></div>
+      <h2 style="font-size:14px;">Ultimi deploy</h2>
+      <div id="renderDeploys"></div>
+    </div>
+  </div>
 </div>
 
 <audio id="testAudio" style="display:none"></audio>
@@ -84,6 +169,30 @@ const LANGS = [
   { code: "en", label: "EN" },
   { code: "es", label: "ES" },
 ];
+
+// ---------------------------------------------------------------------------
+// Navigazione a tab
+// ---------------------------------------------------------------------------
+let dashboardLoaded = false;
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    const target = btn.dataset.tab;
+    document.querySelectorAll(".tab-panel").forEach((p) => {
+      p.style.display = p.dataset.panel === target ? "" : "none";
+    });
+    if (target === "dashboard" && !dashboardLoaded) {
+      dashboardLoaded = true;
+      loadDashboard();
+      loadRenderHealth();
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Voci TTS per lingua
+// ---------------------------------------------------------------------------
 
 // Voci Gemini TTS predefinite (modello gemini-3.1-flash-tts-preview), con
 // una breve caratterizzazione indicativa — usa "Prova voce" per giudicare
@@ -248,7 +357,7 @@ document.getElementById("saveVoicesBtn").addEventListener("click", async () => {
 });
 
 document.getElementById("releaseLocalBtn").addEventListener("click", async () => {
-  const status = document.getElementById("voicesStatus");
+  const status = document.getElementById("releaseLocalStatus");
   status.textContent = "Salvo e apro il gioco in locale...";
   try {
     await saveVoices();
@@ -258,6 +367,57 @@ document.getElementById("releaseLocalBtn").addEventListener("click", async () =>
     status.textContent = "Errore: " + e.message;
   }
 });
+
+// ---------------------------------------------------------------------------
+// Funzionalità: flag pulsante "!"
+// ---------------------------------------------------------------------------
+
+async function loadFeatureFlags() {
+  const res = await fetch("/api/feature-flags");
+  const data = await res.json();
+  document.getElementById("exclamationFlagCheckbox").checked = !!data.exclamation_button_enabled;
+}
+
+async function refreshFeatureFlagsProd() {
+  const badge = document.getElementById("exclamationProdBadge");
+  badge.textContent = "🔵 produzione: verifico...";
+  badge.className = "prod-badge unknown";
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch("https://tumbulella.onrender.com/api/feature-flags", { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const enabled = !!data.exclamation_button_enabled;
+    badge.textContent = "🟢 in produzione: " + (enabled ? "attivo" : "spento");
+    badge.className = "prod-badge" + (enabled ? "" : " off");
+  } catch (e) {
+    badge.textContent = "⚪ produzione non raggiungibile (magari in sleep, riprova)";
+    badge.className = "prod-badge unknown";
+  }
+}
+
+document.getElementById("saveFlagsBtn").addEventListener("click", async () => {
+  const status = document.getElementById("flagsStatus");
+  status.textContent = "Salvo...";
+  try {
+    const res = await fetch("/api/feature-flags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ exclamation_button_enabled: document.getElementById("exclamationFlagCheckbox").checked }),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    status.textContent = "✓ Salvato in locale — ricordati di premere \"Rilascia\" per pubblicarlo in produzione.";
+    refreshGitStatus();
+  } catch (e) {
+    status.textContent = "Errore: " + e.message;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Rilascio in produzione
+// ---------------------------------------------------------------------------
 
 let lastEntries = [];
 
@@ -327,7 +487,158 @@ document.getElementById("releaseBtn").addEventListener("click", async () => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Dashboard
+// ---------------------------------------------------------------------------
+
+const GRANULARITY_LIMITS = { day: 30, week: 12, month: 12, year: 5 };
+const GRANULARITY_LABELS = { day: "giorno", week: "settimana", month: "mese", year: "anno" };
+let currentGranularity = "day";
+
+function fmtDuration(seconds) {
+  if (!seconds) return "0 min";
+  const m = Math.round(seconds / 60);
+  if (m < 60) return m + " min";
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  return h + "h " + (rem ? rem + "min" : "");
+}
+
+document.querySelectorAll(".granularity-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".granularity-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentGranularity = btn.dataset.granularity;
+    loadDashboard();
+  });
+});
+
+async function loadDashboard() {
+  const statusEl = document.getElementById("dashboardStatus");
+  const unavailableEl = document.getElementById("dashboardUnavailable");
+  const contentEl = document.getElementById("dashboardContent");
+  statusEl.textContent = "Carico...";
+  try {
+    const limit = GRANULARITY_LIMITS[currentGranularity];
+    const res = await fetch(`/api/dashboard/stats?granularity=${currentGranularity}&limit=${limit}`);
+    const data = await res.json();
+    statusEl.textContent = "";
+    if (!data.available) {
+      unavailableEl.style.display = "block";
+      unavailableEl.textContent = "ℹ️ Dashboard non disponibile: " + (data.reason || "configurazione mancante") + ". Vedi backend/.env.example per come attivarla (GITHUB_STATS_TOKEN + GITHUB_STATS_GIST_ID).";
+      contentEl.style.display = "none";
+      return;
+    }
+    unavailableEl.style.display = "none";
+    contentEl.style.display = "block";
+    renderKpis(data.summary, data.total_known_devices);
+    renderLangBars(data.summary.languages);
+    renderStatsTable(data.buckets);
+  } catch (e) {
+    statusEl.textContent = "";
+    unavailableEl.style.display = "block";
+    unavailableEl.textContent = "ℹ️ Errore nel caricamento: " + e.message;
+    contentEl.style.display = "none";
+  }
+}
+
+function kpiTile(value, label) {
+  return `<div class="kpi-tile"><div class="value">${value}</div><div class="label">${label}</div></div>`;
+}
+
+function renderKpis(summary, totalKnownDevices) {
+  const grid = document.getElementById("kpiGrid");
+  grid.innerHTML =
+    kpiTile(summary.games_started, "Partite iniziate") +
+    kpiTile(summary.numbers_called, "Numeri estratti") +
+    kpiTile(summary.exclamation_presses, 'Pressioni tasto "!"') +
+    kpiTile(fmtDuration(summary.avg_duration_seconds), "Durata media partita") +
+    kpiTile(fmtDuration(summary.max_duration_seconds), "Durata massima partita") +
+    kpiTile(summary.new_devices, "Dispositivi nuovi nel periodo") +
+    kpiTile(totalKnownDevices, "Dispositivi totali (da sempre)");
+}
+
+function renderLangBars(languages) {
+  const container = document.getElementById("langBars");
+  const total = Object.values(languages).reduce((a, b) => a + b, 0);
+  if (total === 0) {
+    container.innerHTML = "<em style='color:#0c3b5e66; font-size:12px;'>Nessun dato nel periodo mostrato.</em>";
+    return;
+  }
+  container.innerHTML = LANGS.map(({ code, label }) => {
+    const count = languages[code] || 0;
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    return `
+      <div class="lang-bar-row">
+        <span class="lang-tag">${label}</span>
+        <div class="lang-bar-track"><div class="lang-bar-fill" style="width:${pct}%"></div></div>
+        <span class="lang-bar-count">${count} (${pct}%)</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderStatsTable(buckets) {
+  const table = document.getElementById("statsTable");
+  if (!buckets.length) {
+    table.innerHTML = "<tr><td><em style='color:#0c3b5e66'>Nessun dato ancora.</em></td></tr>";
+    return;
+  }
+  const rows = buckets.slice().reverse().map((b) => `
+    <tr>
+      <td>${b.label}</td>
+      <td>${b.games_started}</td>
+      <td>${b.numbers_called}</td>
+      <td>${b.exclamation_presses}</td>
+      <td>${fmtDuration(b.avg_duration_seconds)}</td>
+      <td>${fmtDuration(b.max_duration_seconds)}</td>
+      <td>${b.new_devices}</td>
+    </tr>
+  `).join("");
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Periodo</th><th>Partite</th><th>Numeri</th><th>"!"</th><th>Durata media</th><th>Durata max</th><th>Nuovi</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  `;
+}
+
+async function loadRenderHealth() {
+  const unavailableEl = document.getElementById("renderUnavailable");
+  const contentEl = document.getElementById("renderContent");
+  try {
+    const res = await fetch("/api/dashboard/render");
+    const data = await res.json();
+    if (!data.available) {
+      unavailableEl.style.display = "block";
+      unavailableEl.textContent = "ℹ️ Non disponibile: " + (data.reason || "configurazione mancante") + ". Vedi backend/.env.example per come attivarla (RENDER_API_KEY).";
+      contentEl.style.display = "none";
+      return;
+    }
+    unavailableEl.style.display = "none";
+    contentEl.style.display = "block";
+    document.getElementById("renderKpiGrid").innerHTML =
+      kpiTile(data.service_name || "—", "Servizio") +
+      kpiTile(data.suspended === "not_suspended" || data.suspended === false ? "attivo" : "sospeso", "Stato");
+    const deploysEl = document.getElementById("renderDeploys");
+    if (!data.recent_deploys || !data.recent_deploys.length) {
+      deploysEl.innerHTML = "<em style='color:#0c3b5e66; font-size:12px;'>Nessun deploy recente trovato.</em>";
+    } else {
+      deploysEl.innerHTML = data.recent_deploys
+        .map((d) => `<div class="deploy-row">${d.status || "?"} — ${d.created_at || "?"}</div>`)
+        .join("");
+    }
+  } catch (e) {
+    unavailableEl.style.display = "block";
+    unavailableEl.textContent = "ℹ️ Errore nel caricamento: " + e.message;
+    contentEl.style.display = "none";
+  }
+}
+
 loadVoices().then(refreshProductionConfig);
+loadFeatureFlags().then(refreshFeatureFlagsProd);
 refreshGitStatus();
 </script>
 </body>

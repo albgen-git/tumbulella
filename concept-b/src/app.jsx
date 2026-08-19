@@ -269,12 +269,22 @@ function App() {
   const [currentCall, setCurrentCall] = useState(null);
   const [muted, setMuted] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [exclamationEnabled, setExclamationEnabled] = useState(true);
+
+  // Il pulsante "!" può essere spento dalla consolle admin (feature_flags.json)
+  // se in produzione risultasse troppo usato — vedi window.fetchFeatureFlags
+  // in data.js. Di default resta visibile finché la fetch non risponde, così
+  // il comportamento resta quello di sempre se la chiamata è ancora in volo.
+  useEffect(() => {
+    window.fetchFeatureFlags().then(setExclamationEnabled);
+  }, []);
 
   const orderRef = useRef([]); // fonte di verità sincrona per l'ordine estratti
   const lastSentencesRef = useRef([]); // ultime due frasi generate dal backend (FIFO) — unico contesto mandato indietro, costo pressoché costante per tutta la partita
   const queueRef = useRef([]); // coda dei numeri cliccati in attesa di "chiamata + narrazione"
   const processingRef = useRef(false);
   const sessionRef = useRef(0); // incrementato a ogni "nuova storia": invalida le sequenze in corso
+  const gameSessionIdRef = useRef(window.newGameSessionId()); // ID di partita per il cruscotto admin (durate) — non è sessionRef sopra, concetti diversi
   const languageRef = useRef(language);
   const mutedRef = useRef(muted); // aggiornato in modo sincrono nell'unico punto che lo cambia (bottone muto), non via useEffect — stesso motivo di languageRef sotto
 
@@ -325,7 +335,7 @@ function App() {
     const prefix = window.buildPrefix(item.n, lang);
     let narration;
     try {
-      narration = await window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang);
+      narration = await window.fetchNarration(item.n, lastSentencesRef.current, previousNumbers, lang, gameSessionIdRef.current);
     } catch (err) {
       if (sessionRef.current !== session) return;
       const errText =
@@ -382,6 +392,7 @@ function App() {
 
   const handleNewStory = () => {
     sessionRef.current += 1;
+    gameSessionIdRef.current = window.newGameSessionId();
     window.stopSpeaking();
     orderRef.current = [];
     lastSentencesRef.current = [];
@@ -405,6 +416,7 @@ function App() {
   const handleExclamation = () => {
     if (muted || phase !== "idle") return;
     window.speak(window.pickRandomExclamation(language), language, false);
+    window.trackExclamation(gameSessionIdRef.current);
   };
 
   // Pulsante "dado" — estrae un numero a caso tra quelli non ancora usciti
@@ -417,6 +429,13 @@ function App() {
     if (available.length === 0) return;
     const n = available[Math.floor(Math.random() * available.length)];
     handleCellClick(n);
+  };
+
+  // Pulsante "condividi" — apre WhatsApp con un messaggio precompilato
+  // (link wa.me, nessun SDK esterno). Testo nella lingua attiva.
+  const handleShare = () => {
+    const text = window.SHARE_TEXT[language] || window.SHARE_TEXT.it;
+    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -433,6 +452,19 @@ function App() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleShare}
+              title="Condividi su WhatsApp"
+              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-napoli-700 hover:scale-105 active:scale-95 transition-transform shrink-0"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+            </button>
             <button
               onClick={handleNewStory}
               title="Nuova storia"
@@ -460,20 +492,22 @@ function App() {
             >
               {muted ? "🔇" : "🔊"}
             </button>
-            <button
-              onClick={handleExclamation}
-              disabled={muted || phase !== "idle"}
-              title={
-                muted
-                  ? "Riattiva la voce per usare l'esortazione"
-                  : phase !== "idle"
-                  ? "Aspetta che il banditore finisca..."
-                  : "Un po' di sveglia per tutti!"
-              }
-              className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              !
-            </button>
+            {exclamationEnabled && (
+              <button
+                onClick={handleExclamation}
+                disabled={muted || phase !== "idle"}
+                title={
+                  muted
+                    ? "Riattiva la voce per usare l'esortazione"
+                    : phase !== "idle"
+                    ? "Aspetta che il banditore finisca..."
+                    : "Un po' di sveglia per tutti!"
+                }
+                className="w-11 h-11 rounded-full bg-white shadow-md flex items-center justify-center text-lg hover:scale-105 active:scale-95 transition-transform shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                !
+              </button>
+            )}
             <button
               onClick={handleRandomNumber}
               title="Numero a caso"

@@ -245,6 +245,15 @@ window.EMPTY_STATE_TEXT = {
   es: "Toca el tablero y pulsa el primer número para empezar la historia.",
 };
 
+// Testo del pulsante "condividi su WhatsApp" (wa.me/?text=...) — un link
+// semplice, nessuna libreria/SDK di terze parti necessaria.
+window.SHARE_TEXT = {
+  nap: "Iucate a Tumbulella, 'a tombola napulitana cu 'e storie cuntate da ll'intelligenza artificiale! 🎲 https://tumbulella.it",
+  it: "Gioca a Tumbulella, la tombola napoletana con storie raccontate dall'intelligenza artificiale! 🎲 https://tumbulella.it",
+  en: "Play Tumbulella, the Neapolitan tombola with stories told by AI! 🎲 https://tumbulella.it",
+  es: "Juega a Tumbulella, el bingo napolitano con historias contadas por la IA! 🎲 https://tumbulella.it",
+};
+
 // ---------------------------------------------------------------------------
 // Pulsante "!" (esortazione): per i momenti di silenzio tra un numero e
 // l'altro. Frasi statiche (frasi-pazze-{lingua}.txt nella root del repo),
@@ -362,7 +371,13 @@ var MALE_VOICE_NAME_PATTERNS = {
 function pickVoice(voices, bcp47) {
   var base = bcp47.split("-")[0].toLowerCase();
 
-  var diego = voices.filter(function (v) { return /diego/i.test(v.name); });
+  // BUG STORICO: questo filtro non controllava la lingua della voce "Diego"
+  // trovata, solo il nome — su sistemi con un "Diego" installato per
+  // un'altra lingua (es. inglese o spagnolo), veniva scelto comunque anche
+  // per napoletano/italiano, causando letture occasionali in lingua sbagliata.
+  var diego = voices.filter(function (v) {
+    return v.lang && v.lang.toLowerCase().indexOf(base) === 0 && /diego/i.test(v.name);
+  });
   if (diego.length) return diego[0];
 
   var malePattern = MALE_VOICE_NAME_PATTERNS[base];
@@ -580,6 +595,23 @@ fetch(window.BACKEND_URL + "/api/tts-config")
   })
   .catch(function () {});
 
+// Flag di funzionalità (feature_flags.json, modificabile dalla consolle admin
+// locale) — per ora solo l'abilitazione del pulsante "!" (esortazione),
+// pensato per poterlo spegnere rapidamente se in produzione risultasse troppo
+// usato. Resta attivo di default finché la fetch non risponde, così il
+// comportamento resta quello di sempre se la chiamata è ancora in volo o
+// fallisce (nessun modo per rompere il gioco solo perché questa fetch fallisce).
+window.fetchFeatureFlags = function () {
+  return fetch(window.BACKEND_URL + "/api/feature-flags")
+    .then(function (res) { return res.ok ? res.json() : null; })
+    .then(function (config) {
+      return config && typeof config.exclamation_button_enabled === "boolean"
+        ? config.exclamation_button_enabled
+        : true;
+    })
+    .catch(function () { return true; });
+};
+
 // Due errori ben distinti: il backend non risponde affatto (server spento,
 // rete giù) vs il backend risponde ma segnala un problema suo (es. quota LLM
 // esaurita, chiave non configurata). Confonderli è fuorviante: il secondo
@@ -613,7 +645,33 @@ window.LLM_BACKEND_ERROR_PREFIX = {
 // "backend_error" (risposta HTTP di errore, es. quota Gemini esaurita) — chi
 // chiama sceglie il messaggio giusto in base al kind (vedi playSequence in
 // index.html).
-window.fetchNarration = async function (number, previousSentences, previousNumbers, language) {
+// ID anonimo persistente per dispositivo (mai una persona reale) — solo per
+// il cruscotto d'uso della consolle admin locale (partite/utenti nuovi vs
+// di ritorno). Nessun cookie, nessun dato personale, solo un numero casuale
+// salvato in localStorage; se localStorage non è disponibile (es. modalità
+// privata restrittiva) il gioco funziona lo stesso, semplicemente quella
+// sessione non conta per le statistiche.
+window.getDeviceId = function () {
+  try {
+    var key = "tumbulella_device_id";
+    var id = localStorage.getItem(key);
+    if (!id) {
+      id = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : "d-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+      localStorage.setItem(key, id);
+    }
+    return id;
+  } catch (e) {
+    return null;
+  }
+};
+
+// ID della singola partita (rigenerato ad ogni "Nuova storia") — usato solo
+// per calcolare la durata delle partite nel cruscotto admin, non persistito.
+window.newGameSessionId = function () {
+  return window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : "s-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+};
+
+window.fetchNarration = async function (number, previousSentences, previousNumbers, language, gameSessionId) {
   let res;
   try {
     res = await fetch(window.BACKEND_URL + "/api/narrate", {
@@ -624,6 +682,8 @@ window.fetchNarration = async function (number, previousSentences, previousNumbe
         previous_sentences: previousSentences,
         previous_numbers: previousNumbers,
         language: language,
+        device_id: window.getDeviceId(),
+        session_id: gameSessionId,
       }),
     });
   } catch (networkErr) {
@@ -642,6 +702,16 @@ window.fetchNarration = async function (number, previousSentences, previousNumbe
   }
   const data = await res.json();
   return data.narration;
+};
+
+// "Fire and forget" per il cruscotto admin — non deve mai rallentare o
+// bloccare il gioco: nessun await da parte del chiamante, errori ignorati.
+window.trackExclamation = function (gameSessionId) {
+  fetch(window.BACKEND_URL + "/api/event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event_type: "exclamation", session_id: gameSessionId }),
+  }).catch(function () {});
 };
 
 // Spezza un testo con marcatori **grassetto** (i soli usati dal backend, per
