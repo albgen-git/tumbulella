@@ -158,6 +158,28 @@
 </head>
 <body class="font-body">
   <div id="root"></div>
+  <!-- Contenuto statico, fuori da #root: React non lo tocca mai (monta solo
+       dentro #root), quindi resta nell'HTML fin dal primo caricamento della
+       pagina, prima ancora che il gioco venga interpretato — utile sia a chi
+       arriva da un motore di ricerca sia perché la schermata iniziale del
+       gioco (prima di cliccare un numero) ha pochissimo testo proprio. -->
+  <footer class="max-w-6xl mx-auto px-4 sm:px-6 pb-10 text-napoli-900">
+    <div class="bg-white/70 rounded-2xl p-6 sm:p-8 grid sm:grid-cols-3 gap-6">
+      <div>
+        <h2 class="font-display font-bold text-lg text-napoli-800 mb-2">Cosa è Tumbulella</h2>
+        <p class="text-sm leading-relaxed text-napoli-900/80">Tumbulella è la tombola napoletana di sempre — cartelle, novanta numeri, la Smorfia — con in più una voce che racconta una storia vera, generata dall'intelligenza artificiale numero dopo numero, in napoletano, italiano, inglese o spagnolo.</p>
+      </div>
+      <div>
+        <h2 class="font-display font-bold text-lg text-napoli-800 mb-2">La Smorfia napoletana</h2>
+        <p class="text-sm leading-relaxed text-napoli-900/80">Ogni numero della tombola ha un significato popolare tramandato da generazioni: un oggetto, un personaggio, un aneddoto. <a href="/smorfia/" class="text-napoli-600 font-bold underline hover:text-napoli-800">Scopri il significato di tutti i 90 numeri →</a></p>
+      </div>
+      <div>
+        <h2 class="font-display font-bold text-lg text-napoli-800 mb-2">Come si gioca</h2>
+        <p class="text-sm leading-relaxed text-napoli-900/80">Cartelle, panaro, bussolotti, e la tradizionale usanza napoletana dei cocci dei piatti rotti usati come segnaposto. <a href="/come-si-gioca/" class="text-napoli-600 font-bold underline hover:text-napoli-800">Scopri le regole della tombola →</a></p>
+      </div>
+    </div>
+    <p class="text-sm text-napoli-900/60 text-center mt-6">Questo gioco è un progetto AI realizzato da Alberto Genovese. Per informazioni, scrivete a <a href="mailto:info@tumbulella.it" class="underline hover:text-napoli-700">info@tumbulella.it</a></p>
+  </footer>
   <script src="src/data.js"></script>
   <script type="text/babel">
 const { useState, useRef, useEffect, useCallback } = React;

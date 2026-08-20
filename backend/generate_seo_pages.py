@@ -8,7 +8,9 @@ import json
 
 SITE_URL = "https://tumbulella.it"
 SMORFIA_JSON = "../smorfia.json"
+CURIOSITA_JSON = "../smorfia_curiosita.json"
 OUT_DIR = "../concept-b/smorfia"
+COME_SI_GIOCA_DIR = "../concept-b/come-si-gioca"
 
 HEAD_RESOURCES = """<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -95,7 +97,8 @@ def build_index_page(numeri: dict) -> str:
             f"</tr>"
         )
     body = f"""<h1 class="font-display font-extrabold text-2xl sm:text-3xl text-napoli-800 mb-3">La Smorfia Napoletana: significato dei 90 numeri del Lotto</h1>
-<p class="text-napoli-900/80 leading-relaxed mb-6">La Smorfia napoletana, chiamata anche Cabala, associa a ciascuno dei 90 numeri del lotto un significato popolare — un oggetto, una persona, una situazione della vita quotidiana. Qui sotto trovi la tavola completa, con il significato in napoletano, italiano, inglese e spagnolo per ogni numero. Clicca su un numero per la pagina dedicata, oppure scopri come Tumbulella trasforma questi significati in una storia raccontata a voce durante la tombola.</p>
+<p class="text-napoli-900/80 leading-relaxed mb-3">La Smorfia napoletana, chiamata anche Cabala, associa a ciascuno dei 90 numeri del lotto un significato popolare — un oggetto, una persona, una situazione della vita quotidiana. Qui sotto trovi la tavola completa, con il significato in napoletano, italiano, inglese e spagnolo per ogni numero. Clicca su un numero per la pagina dedicata, oppure scopri come Tumbulella trasforma questi significati in una storia raccontata a voce durante la tombola.</p>
+<p class="text-napoli-900/80 leading-relaxed mb-6">Non conosci ancora le regole del gioco? <a href="/come-si-gioca/" class="text-napoli-600 font-bold underline hover:text-napoli-800">Scopri come si gioca a tombola</a> — cartelle, panaro, bussolotti e la curiosa usanza tutta napoletana dei cocci dei piatti rotti come segnaposto.</p>
 <div class="overflow-x-auto rounded-xl2 bg-white shadow-sm">
 <table class="w-full text-sm text-left">
 <thead><tr class="border-b-2 border-napoli-800/20 text-napoli-800 font-display">
@@ -114,7 +117,54 @@ def build_index_page(numeri: dict) -> str:
     )
 
 
-def build_number_page(n: int, e: dict) -> str:
+def build_come_si_gioca_page() -> str:
+    body = """<nav class="text-sm text-napoli-900/50 mb-4"><a href="/" class="hover:underline">Home</a> / Come si gioca</nav>
+<h1 class="font-display font-extrabold text-2xl sm:text-3xl text-napoli-800 mb-1">Come si gioca a Tombola: le regole della tradizione napoletana</h1>
+<p class="text-napoli-900/60 italic mb-6">Cartelle, panaro, bussolotti e i cocci dei piatti rotti: tutto quello che serve per giocare a tombola come si fa a Napoli da generazioni.</p>
+
+<p class="text-napoli-900/80 leading-relaxed mb-6">La tombola è il gioco che accompagna da sempre le feste di fine anno nelle case napoletane: un tavolo, la famiglia riunita, e novanta numeri che escono uno dopo l'altro tra risate e battute. Le regole sono semplicissime, ma dietro ogni oggetto del gioco — le cartelle, il panaro, i segnaposto — si nasconde un pezzo di tradizione.</p>
+
+<div class="bg-white rounded-xl2 shadow-sm p-5 mb-6">
+  <h2 class="font-display font-bold text-lg text-napoli-800 mb-2">Le cartelle</h2>
+  <p class="text-napoli-900/80 leading-relaxed">Ogni cartella è divisa in 3 righe e 9 colonne, per un totale di 15 numeri: la prima colonna riporta numeri da 1 a 9, la seconda da 10 a 19, e così via fino all'ultima colonna, riservata agli 80 e 90. Ogni riga ne contiene solo 5, alternati a caselle vuote. Si può giocare con una sola cartella o con più cartelle insieme, per aumentare le occasioni di vincita — a Napoli, durante le feste, non è raro vedere un giocatore seguirne quattro o cinque tutte insieme.</p>
+</div>
+
+<div class="bg-white rounded-xl2 shadow-sm p-5 mb-6">
+  <h2 class="font-display font-bold text-lg text-napoli-800 mb-2">Il panaro e i bussolotti</h2>
+  <p class="text-napoli-900/80 leading-relaxed">I novanta numeri vengono estratti a caso da un panaro, il cestino di vimini che li custodisce tutti prima dell'estrazione. Ogni numero è inciso su un bussolotto — il tradizionale gettone tondo di legno — che il banditore pesca alla cieca, uno alla volta, annunciandolo ad alta voce. Nella tombola più autentica, il numero non si dice mai da solo: lo si accompagna con il suo nome della Smorfia, come "ventidue, 'o pazzo!" — proprio l'usanza che ha ispirato Tumbulella.</p>
+</div>
+
+<div class="bg-napoli-50 border-2 border-napoli-200 rounded-xl2 p-5 mb-6">
+  <h2 class="font-display font-bold text-lg text-napoli-800 mb-2">🍽️ I segnaposto: i cocci dei piatti rotti</h2>
+  <p class="text-napoli-900/80 leading-relaxed">Una delle usanze più genuine della tombola napoletana riguarda i segnaposto usati per coprire i numeri chiamati sulla cartella. Prima dei ceci, dei fagioli o dei gettoni comprati apposta, nelle case di Napoli si usavano i cocci: i frammenti di piatti rotti durante l'anno, raccolti e conservati apposta per questo momento. Quando a Napoli si rompe un piatto, invece di buttare via tutto, è tradizione mettere da parte i pezzi più adatti — proprio per giocare a tombola durante le feste. Un'usanza che unisce parsimonia, memoria e un pizzico di scaramanzia, visto che anche rompere un piatto, per la tradizione popolare, porta un po' di fortuna.</p>
+</div>
+
+<div class="bg-white rounded-xl2 shadow-sm p-5 mb-8">
+  <h2 class="font-display font-bold text-lg text-napoli-800 mb-2">Le vincite: ambo, terno, quaterna, cinquina, tombola</h2>
+  <p class="text-napoli-900/80 leading-relaxed mb-3">Man mano che i numeri escono, si coprono sulla propria cartella con i segnaposto. Le vincite arrivano in ordine crescente, sempre riferite ai numeri coperti su una singola riga della cartella — tranne l'ultima, che vale sull'intera cartella:</p>
+  <ul class="text-napoli-900/80 leading-relaxed space-y-1.5 list-none">
+    <li>🎯 <strong class="text-napoli-800">Ambo</strong> — due numeri coperti sulla stessa riga.</li>
+    <li>🎯 <strong class="text-napoli-800">Terno</strong> — tre numeri sulla stessa riga.</li>
+    <li>🎯 <strong class="text-napoli-800">Quaterna</strong> — quattro numeri sulla stessa riga.</li>
+    <li>🎯 <strong class="text-napoli-800">Cinquina</strong> — tutti e cinque i numeri di una riga, coperta per intero.</li>
+    <li>🏆 <strong class="text-napoli-800">Tombola</strong> — tutti i 15 numeri della cartella coperti: si grida "Tombola!" e la partita finisce lì, tra applausi.</li>
+  </ul>
+</div>
+
+<div class="bg-napoli-800 text-white rounded-xl2 p-5 mb-8 text-center">
+  <p class="mb-3">Cartelle, panaro e cocci restano gli stessi di sempre. Tumbulella ci aggiunge solo una voce che racconta una storia, numero dopo numero.</p>
+  <a href="/" class="inline-block bg-lemon-400 text-napoli-900 font-display font-bold rounded-full px-6 py-2.5 hover:bg-lemon-500 transition-colors">🎲 Gioca a Tumbulella</a>
+</div>
+<p class="text-sm"><a href="/smorfia/" class="text-napoli-600 font-bold hover:underline">Scopri anche il significato dei 90 numeri della Smorfia →</a></p>"""
+    return page_shell(
+        title="Come si gioca a Tombola: regole, cartelle e cocci — la tradizione napoletana — Tumbulella",
+        description="Le regole della tombola napoletana: cartelle, panaro, bussolotti, l'usanza dei cocci dei piatti rotti come segnaposto, e le vincite da ambo a tombola.",
+        canonical=f"{SITE_URL}/come-si-gioca/",
+        body=body,
+    )
+
+
+def build_number_page(n: int, e: dict, curiosita: str) -> str:
     prev_link = f'<a href="/smorfia/{n-1}/" class="text-napoli-600 font-bold hover:underline">← Numero {n-1}</a>' if n > 1 else '<span></span>'
     next_link = f'<a href="/smorfia/{n+1}/" class="text-napoli-600 font-bold hover:underline">Numero {n+1} →</a>' if n < 90 else '<span></span>'
     body = f"""<nav class="text-sm text-napoli-900/50 mb-4"><a href="/" class="hover:underline">Home</a> / <a href="/smorfia/" class="hover:underline">Smorfia</a> / {n}</nav>
@@ -125,6 +175,10 @@ def build_number_page(n: int, e: dict) -> str:
   <div class="bg-white rounded-xl2 shadow-sm p-4"><p class="text-xs uppercase tracking-wide text-napoli-500 font-bold mb-1">Italiano</p><p class="text-lg font-display font-bold text-napoli-800">{e["italiano"]}</p></div>
   <div class="bg-white rounded-xl2 shadow-sm p-4"><p class="text-xs uppercase tracking-wide text-napoli-500 font-bold mb-1">English</p><p class="text-lg font-display font-bold text-napoli-800">{e["inglese"]}</p></div>
   <div class="bg-white rounded-xl2 shadow-sm p-4"><p class="text-xs uppercase tracking-wide text-napoli-500 font-bold mb-1">Español</p><p class="text-lg font-display font-bold text-napoli-800">{e["spagnolo"]}</p></div>
+</div>
+<div class="bg-white rounded-xl2 shadow-sm p-5 mb-8">
+  <h2 class="font-display font-bold text-lg text-napoli-800 mb-2">La storia del numero {n}</h2>
+  <p class="text-napoli-900/80 leading-relaxed">{curiosita}</p>
 </div>
 <div class="bg-napoli-800 text-white rounded-xl2 p-5 mb-8 text-center">
   <p class="mb-3">Vuoi sentire il numero {n} diventare parte di un racconto vero, durante la tua partita a tombola?</p>
@@ -152,6 +206,9 @@ def main():
         data = json.load(f)
     numeri = data["numeri"]
 
+    with open(CURIOSITA_JSON, encoding="utf-8") as f:
+        curiosita = json.load(f)
+
     import os
     os.makedirs(OUT_DIR, exist_ok=True)
     with open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8") as f:
@@ -161,11 +218,18 @@ def main():
         n_dir = os.path.join(OUT_DIR, str(n))
         os.makedirs(n_dir, exist_ok=True)
         with open(os.path.join(n_dir, "index.html"), "w", encoding="utf-8") as f:
-            f.write(build_number_page(n, numeri[str(n)]))
+            f.write(build_number_page(n, numeri[str(n)], curiosita[str(n)]))
 
     print(f"Generate 91 pagine in {OUT_DIR} (index + 90 numeri)")
 
-    sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/smorfia/"] + [f"{SITE_URL}/smorfia/{n}/" for n in range(1, 91)]
+    os.makedirs(COME_SI_GIOCA_DIR, exist_ok=True)
+    with open(os.path.join(COME_SI_GIOCA_DIR, "index.html"), "w", encoding="utf-8") as f:
+        f.write(build_come_si_gioca_page())
+    print(f"Generata {COME_SI_GIOCA_DIR}/index.html")
+
+    sitemap_urls = [f"{SITE_URL}/", f"{SITE_URL}/smorfia/", f"{SITE_URL}/come-si-gioca/"] + [
+        f"{SITE_URL}/smorfia/{n}/" for n in range(1, 91)
+    ]
     sitemap_path = "../concept-b/sitemap.xml"
     with open(sitemap_path, "w", encoding="utf-8") as f:
         f.write(build_sitemap(sitemap_urls))
